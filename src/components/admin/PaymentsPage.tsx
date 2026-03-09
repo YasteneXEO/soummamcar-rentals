@@ -1,12 +1,22 @@
-import { useAdminStore } from '@/store/adminStore';
+import { useState } from 'react';
+import { useAdminStore, Payment } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '@/components/ui/table';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription
+} from '@/components/ui/dialog';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { CreditCard, AlertTriangle, CheckCircle, Printer, DollarSign } from 'lucide-react';
+import { CreditCard, AlertTriangle, CheckCircle, Printer, DollarSign, Shield, Scale } from 'lucide-react';
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   baridimob: 'BaridiMob',
@@ -14,28 +24,36 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cash: 'Espèces',
 };
 
+const CAUTION_STATUS_LABELS: Record<string, string> = {
+  pending: 'En attente',
+  paid: 'Bloquée',
+  refunded: 'Restituée',
+  partially_retained: 'Retenue partielle',
+  retained: 'Retenue totale',
+  disputed: 'Litige en cours',
+};
+
 const CAUTION_STATUS_STYLES: Record<string, string> = {
+  pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
   paid: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
   refunded: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+  partially_retained: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+  retained: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+  disputed: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
 };
+
+interface CautionModalState {
+  open: boolean;
+  payment: Payment | null;
+  action: 'refund' | 'partial_retain' | 'retain' | 'dispute' | null;
+}
 
 export const PaymentsPage = () => {
   const { reservations, payments, clients, vehicles, updatePayment, addPayment } = useAdminStore();
   const { toast } = useToast();
-
-  const handleReleaseCaution = (paymentId: string, reservationId: string) => {
-    updatePayment(paymentId, { status: 'refunded', paidAt: new Date().toISOString() });
-    toast({ 
-      title: 'Caution restituée', 
-      description: 'La caution a été marquée comme restituée.' 
-    });
-  };
-
-  const handleExportPDF = () => {
-    window.print();
-    toast({ title: 'Export PDF', description: 'La fenêtre d\'impression est ouverte.' });
-  };
+  const [cautionModal, setCautionModal] = useState<CautionModalState>({ open: false, payment: null, action: null });
+  const [retainedAmount, setRetainedAmount] = useState('');
+  const [retainedReason, setRetainedReason] = useState('');
 
   const handleMarkPaid = (reservationId: string, amount: number, type: 'deposit' | 'balance' | 'security_deposit') => {
     addPayment({
@@ -50,6 +68,65 @@ export const PaymentsPage = () => {
       title: 'Paiement effectué', 
       description: `Le paiement de ${amount.toLocaleString()} DA a été enregistré.` 
     });
+  };
+
+  const openCautionAction = (payment: Payment, action: CautionModalState['action']) => {
+    setCautionModal({ open: true, payment, action });
+    setRetainedAmount('');
+    setRetainedReason('');
+  };
+
+  const handleCautionAction = () => {
+    const { payment, action } = cautionModal;
+    if (!payment || !action) return;
+
+    const now = new Date().toISOString();
+
+    switch (action) {
+      case 'refund':
+        updatePayment(payment.id, { status: 'refunded', paidAt: now, notes: retainedReason || 'Caution restituée intégralement' });
+        toast({ title: 'Caution restituée', description: `${payment.amount.toLocaleString()} DA restitués au client.` });
+        break;
+      case 'partial_retain':
+        const amount = parseInt(retainedAmount);
+        if (!amount || amount <= 0 || amount >= payment.amount) {
+          toast({ title: 'Montant invalide', description: `Le montant doit être entre 1 et ${payment.amount - 1} DA.` });
+          return;
+        }
+        updatePayment(payment.id, { 
+          status: 'partially_retained', 
+          paidAt: now,
+          retainedAmount: amount,
+          retainedReason: retainedReason || 'Retenue partielle'
+        });
+        toast({ 
+          title: 'Retenue partielle', 
+          description: `${amount.toLocaleString()} DA retenus, ${(payment.amount - amount).toLocaleString()} DA restitués.` 
+        });
+        break;
+      case 'retain':
+        updatePayment(payment.id, { 
+          status: 'retained', 
+          paidAt: now,
+          retainedAmount: payment.amount,
+          retainedReason: retainedReason || 'Caution retenue intégralement'
+        });
+        toast({ title: 'Caution retenue', description: `${payment.amount.toLocaleString()} DA retenus.` });
+        break;
+      case 'dispute':
+        updatePayment(payment.id, { 
+          status: 'disputed', 
+          notes: retainedReason || 'Litige ouvert'
+        });
+        toast({ title: 'Litige ouvert', description: 'La caution est en litige.' });
+        break;
+    }
+    setCautionModal({ open: false, payment: null, action: null });
+  };
+
+  const handleExportPDF = () => {
+    window.print();
+    toast({ title: 'Export PDF', description: 'La fenêtre d\'impression est ouverte.' });
   };
 
   // Summary calculations
@@ -70,6 +147,14 @@ export const PaymentsPage = () => {
     .filter(p => p.type === 'security_deposit' && p.status === 'paid')
     .reduce((sum, p) => sum + p.amount, 0);
 
+  const totalRetained = payments
+    .filter(p => p.type === 'security_deposit' && (p.status === 'partially_retained' || p.status === 'retained'))
+    .reduce((sum, p) => sum + (p.retainedAmount ?? 0), 0);
+
+  const totalDisputed = payments
+    .filter(p => p.type === 'security_deposit' && p.status === 'disputed')
+    .reduce((sum, p) => sum + p.amount, 0);
+
   const totalOutstanding = reservations
     .filter(r => r.status !== 'cancelled' && r.status !== 'completed')
     .reduce((sum, r) => {
@@ -79,12 +164,25 @@ export const PaymentsPage = () => {
       return sum + Math.max(0, r.totalAmount - paid);
     }, 0);
 
-  // Pending cautions (rental completed but caution not refunded)
+  // Cautions needing action (rental completed, caution still blocked)
   const pendingCautions = payments.filter(p => {
     if (p.type !== 'security_deposit' || p.status !== 'paid') return false;
     const reservation = reservations.find(r => r.id === p.reservationId);
     return reservation?.status === 'completed';
   });
+
+  // Disputed cautions
+  const disputedCautions = payments.filter(p => p.type === 'security_deposit' && p.status === 'disputed');
+
+  const getActionTitle = () => {
+    switch (cautionModal.action) {
+      case 'refund': return 'Restituer la caution';
+      case 'partial_retain': return 'Retenue partielle';
+      case 'retain': return 'Retenue totale';
+      case 'dispute': return 'Ouvrir un litige';
+      default: return '';
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -99,7 +197,7 @@ export const PaymentsPage = () => {
       </div>
 
       {/* Summary KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">CA collecté ce mois</CardTitle>
@@ -120,11 +218,20 @@ export const PaymentsPage = () => {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Solde en attente</CardTitle>
-            <AlertTriangle className="w-4 h-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Montant retenu</CardTitle>
+            <Shield className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">{totalOutstanding.toLocaleString()} DA</div>
+            <div className="text-2xl font-bold text-destructive">{totalRetained.toLocaleString()} DA</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">En litige</CardTitle>
+            <Scale className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-600">{totalDisputed.toLocaleString()} DA</div>
           </CardContent>
         </Card>
       </div>
@@ -135,7 +242,7 @@ export const PaymentsPage = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-orange-700 dark:text-orange-300">
               <AlertTriangle className="w-5 h-5" />
-              Cautions à restituer ({pendingCautions.length})
+              Cautions à traiter ({pendingCautions.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -151,14 +258,69 @@ export const PaymentsPage = () => {
                         {reservation?.referenceNumber} — Caution: {p.amount.toLocaleString()} DA
                       </p>
                     </div>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      className="border-green-500 text-green-700 hover:bg-green-50"
-                      onClick={() => handleReleaseCaution(p.id, reservation?.id ?? '')}
-                    >
-                      <CheckCircle className="w-4 h-4 mr-1" /> Restituer
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" className="border-green-500 text-green-700 hover:bg-green-50"
+                        onClick={() => openCautionAction(p, 'refund')}>
+                        <CheckCircle className="w-4 h-4 mr-1" /> Restituer
+                      </Button>
+                      <Button size="sm" variant="outline" className="border-orange-500 text-orange-700 hover:bg-orange-50"
+                        onClick={() => openCautionAction(p, 'partial_retain')}>
+                        Retenue partielle
+                      </Button>
+                      <Button size="sm" variant="outline" className="border-red-500 text-red-700 hover:bg-red-50"
+                        onClick={() => openCautionAction(p, 'retain')}>
+                        Retenue totale
+                      </Button>
+                      <Button size="sm" variant="outline" className="border-purple-500 text-purple-700 hover:bg-purple-50"
+                        onClick={() => openCautionAction(p, 'dispute')}>
+                        <Scale className="w-4 h-4 mr-1" /> Litige
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Disputed cautions */}
+      {disputedCautions.length > 0 && (
+        <Card className="border-purple-200 bg-purple-50 dark:border-purple-800 dark:bg-purple-950">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-purple-700 dark:text-purple-300">
+              <Scale className="w-5 h-5" />
+              Litiges en cours ({disputedCautions.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {disputedCautions.map(p => {
+                const reservation = reservations.find(r => r.id === p.reservationId);
+                const client = clients.find(c => c.id === reservation?.clientId);
+                return (
+                  <div key={p.id} className="flex items-center justify-between p-3 bg-white dark:bg-background border rounded-lg">
+                    <div>
+                      <p className="font-semibold">{client?.fullName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {reservation?.referenceNumber} — {p.amount.toLocaleString()} DA
+                      </p>
+                      {p.notes && <p className="text-xs text-muted-foreground mt-1">📝 {p.notes}</p>}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" className="border-green-500 text-green-700 hover:bg-green-50"
+                        onClick={() => openCautionAction(p, 'refund')}>
+                        Restituer
+                      </Button>
+                      <Button size="sm" variant="outline" className="border-orange-500 text-orange-700 hover:bg-orange-50"
+                        onClick={() => openCautionAction(p, 'partial_retain')}>
+                        Retenue partielle
+                      </Button>
+                      <Button size="sm" variant="outline" className="border-red-500 text-red-700 hover:bg-red-50"
+                        onClick={() => openCautionAction(p, 'retain')}>
+                        Retenue totale
+                      </Button>
+                    </div>
                   </div>
                 );
               })}
@@ -198,7 +360,7 @@ export const PaymentsPage = () => {
                 const depositPayment = payments.find(p => p.reservationId === r.id && p.type === 'deposit');
                 const balancePayment = payments.find(p => p.reservationId === r.id && p.type === 'balance');
                 const cautionPayment = payments.find(p => p.reservationId === r.id && p.type === 'security_deposit');
-                const remainingBalance = r.totalAmount - r.deposit;
+                const remainingBalance = r.subtotal - r.deposit;
 
                 return (
                   <TableRow key={r.id}>
@@ -243,10 +405,20 @@ export const PaymentsPage = () => {
                     <TableCell>{r.securityDeposit.toLocaleString()} DA</TableCell>
                     <TableCell>
                       {cautionPayment ? (
-                        <Badge className={CAUTION_STATUS_STYLES[cautionPayment.status]}>
-                          {cautionPayment.status === 'paid' ? 'Bloquée' : 
-                           cautionPayment.status === 'refunded' ? 'Restituée' : 'En attente'}
-                        </Badge>
+                        <div className="space-y-1">
+                          <Badge className={CAUTION_STATUS_STYLES[cautionPayment.status]}>
+                            {CAUTION_STATUS_LABELS[cautionPayment.status]}
+                          </Badge>
+                          {cautionPayment.status === 'partially_retained' && cautionPayment.retainedAmount && (
+                            <p className="text-xs text-muted-foreground">
+                              Retenu: {cautionPayment.retainedAmount.toLocaleString()} DA
+                              <br />Rendu: {(cautionPayment.amount - cautionPayment.retainedAmount).toLocaleString()} DA
+                            </p>
+                          )}
+                          {cautionPayment.retainedReason && (
+                            <p className="text-xs text-muted-foreground">📝 {cautionPayment.retainedReason}</p>
+                          )}
+                        </div>
                       ) : (
                         <div className="flex flex-col items-start gap-1">
                           <Badge variant="outline">—</Badge>
@@ -275,6 +447,68 @@ export const PaymentsPage = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Caution action modal */}
+      <Dialog open={cautionModal.open} onOpenChange={(o) => !o && setCautionModal({ open: false, payment: null, action: null })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{getActionTitle()}</DialogTitle>
+            <DialogDescription>
+              Caution de {cautionModal.payment?.amount.toLocaleString()} DA
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {cautionModal.action === 'partial_retain' && (
+              <div className="space-y-2">
+                <Label>Montant retenu (DA)</Label>
+                <Input 
+                  type="number" 
+                  placeholder={`Max: ${(cautionModal.payment?.amount ?? 0) - 1}`}
+                  value={retainedAmount} 
+                  onChange={e => setRetainedAmount(e.target.value)} 
+                />
+                {retainedAmount && parseInt(retainedAmount) > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    → Montant restitué au client : {((cautionModal.payment?.amount ?? 0) - parseInt(retainedAmount)).toLocaleString()} DA
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label>
+                {cautionModal.action === 'dispute' ? 'Motif du litige' : 'Motif / Notes'}
+              </Label>
+              <Textarea
+                placeholder={
+                  cautionModal.action === 'refund' ? 'Véhicule rendu en bon état (optionnel)' :
+                  cautionModal.action === 'dispute' ? 'Décrivez le motif du litige...' :
+                  'Décrivez les dégâts ou le motif de la retenue...'
+                }
+                value={retainedReason}
+                onChange={e => setRetainedReason(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCautionModal({ open: false, payment: null, action: null })}>
+              Annuler
+            </Button>
+            <Button
+              onClick={handleCautionAction}
+              className={
+                cautionModal.action === 'refund' ? 'bg-green-600 hover:bg-green-700' :
+                cautionModal.action === 'dispute' ? 'bg-purple-600 hover:bg-purple-700' :
+                'bg-destructive hover:bg-destructive/90'
+              }
+            >
+              Confirmer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
