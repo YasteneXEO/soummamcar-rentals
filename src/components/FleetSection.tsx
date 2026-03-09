@@ -46,6 +46,7 @@ const translations = {
 export function FleetSection({ language, onBookVehicle }: FleetSectionProps) {
   const t = translations[language];
   const isRTL = language === "ar";
+  const { convert } = useExchangeRate(true);
 
   return (
     <section id="fleet" className="py-20 bg-background" dir={isRTL ? "rtl" : "ltr"}>
