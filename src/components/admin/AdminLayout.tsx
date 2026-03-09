@@ -113,7 +113,7 @@ export const AdminLayout = () => {
           <header className="h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6 flex items-center">
             <SidebarTrigger className="mr-4" />
             <div className="flex items-center gap-4">
-              <h1 className="text-lg font-semibold text-navy">Espace d'administration</h1>
+              <h1 className="text-lg font-semibold text-primary">Espace d'administration</h1>
             </div>
           </header>
           <main className="flex-1 p-6 bg-gray-50">

@@ -87,7 +87,7 @@ export const LoginPage = () => {
             
             <Button 
               type="submit" 
-              className="w-full bg-navy hover:bg-navy-dark" 
+              className="w-full bg-primary hover:bg-primary/90" 
               disabled={isLoading}
             >
               {isLoading ? "Connexion..." : "Se connecter"}
