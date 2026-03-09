@@ -332,7 +332,7 @@ const sampleReservations: Reservation[] = [
     subtotal: 13500,
     deposit: 3375,
     securityDeposit: 20000,
-    totalAmount: 16875,
+    totalAmount: 33500, // subtotal (13500) + securityDeposit (20000)
     specialRequests: 'Livraison aéroport demandée',
     createdAt: '2024-12-08T15:20:00Z'
   },
