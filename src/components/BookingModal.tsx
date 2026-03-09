@@ -227,6 +227,8 @@ export function BookingModal({
   const eurLabel = (amountDZD: number) =>
     isDiaspora ? ` (≈ ${convert(amountDZD)} €)` : "";
 
+  const availableVehicles = vehicles.filter((v) => v.available);
+
 
   const canProceedStep1 = pickupDate && returnDate && location;
   const canProceedStep2 = selectedVehicle;
