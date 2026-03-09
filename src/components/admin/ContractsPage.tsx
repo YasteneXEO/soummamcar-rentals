@@ -127,6 +127,7 @@ function ConditionReportForm({
   const [kmReading, setKmReading] = useState('');
   const [fuelLevel, setFuelLevel] = useState<ConditionReport['fuelLevel']>('full');
   const [damageNotes, setDamageNotes] = useState('');
+  const [photos, setPhotos] = useState<Record<string, string>>({});
 
   const photoSlots = [
     { key: 'front_left', label: 'Avant gauche' },
@@ -139,11 +140,18 @@ function ConditionReportForm({
     { key: 'trunk', label: 'Coffre' },
   ];
 
+  const handlePhotoUpload = (key: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const url = URL.createObjectURL(e.target.files[0]);
+      setPhotos(prev => ({ ...prev, [key]: url }));
+    }
+  };
+
   const handleSave = () => {
     addConditionReport({
       reservationId,
       type,
-      photos: {},
+      photos,
       kmReading: parseInt(kmReading) || 0,
       fuelLevel,
       damageNotes,
@@ -182,12 +190,24 @@ function ConditionReportForm({
       
       <div>
         <Label>Photos ({type === 'pickup' ? 'Départ' : 'Retour'})</Label>
-        <div className="grid grid-cols-4 gap-2 mt-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
           {photoSlots.map(slot => (
-            <div key={slot.key} className="border-2 border-dashed rounded-lg p-3 text-center hover:border-primary transition-colors cursor-pointer">
-              <Camera className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
+            <Label key={slot.key} className="border-2 border-dashed rounded-lg p-3 text-center hover:border-primary transition-colors cursor-pointer block relative">
+              <input 
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                onChange={(e) => handlePhotoUpload(slot.key, e)}
+              />
+              {photos[slot.key] ? (
+                <div className="w-full h-16 mb-1 overflow-hidden rounded">
+                  <img src={photos[slot.key]} alt={slot.label} className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <Camera className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
+              )}
               <p className="text-xs text-muted-foreground">{slot.label}</p>
-            </div>
+            </Label>
           ))}
         </div>
       </div>

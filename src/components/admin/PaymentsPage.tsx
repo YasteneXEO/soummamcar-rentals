@@ -37,6 +37,21 @@ export const PaymentsPage = () => {
     toast({ title: 'Export PDF', description: 'La fenêtre d\'impression est ouverte.' });
   };
 
+  const handleMarkPaid = (reservationId: string, amount: number, type: 'deposit' | 'balance' | 'security_deposit') => {
+    addPayment({
+      reservationId,
+      type,
+      amount,
+      method: type === 'deposit' ? 'baridimob' : 'cash',
+      status: 'paid',
+      paidAt: new Date().toISOString()
+    });
+    toast({ 
+      title: 'Paiement effectué', 
+      description: `Le paiement de ${amount.toLocaleString()} DA a été enregistré.` 
+    });
+  };
+
   // Summary calculations
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
@@ -192,10 +207,19 @@ export const PaymentsPage = () => {
                     <TableCell>
                       <div>
                         <p className="font-semibold">{r.deposit.toLocaleString()} DA</p>
-                        {depositPayment && (
+                        {depositPayment ? (
                           <p className="text-xs text-muted-foreground">
                             {PAYMENT_METHOD_LABELS[depositPayment.method]} • {depositPayment.paidAt ? new Date(depositPayment.paidAt).toLocaleDateString('fr-FR') : '—'}
                           </p>
+                        ) : (
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-xs text-orange-500">En attente</p>
+                            {r.deposit > 0 && (
+                              <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={() => handleMarkPaid(r.id, r.deposit, 'deposit')}>
+                                Encaisser
+                              </Button>
+                            )}
+                          </div>
                         )}
                       </div>
                     </TableCell>
@@ -205,7 +229,14 @@ export const PaymentsPage = () => {
                         {balancePayment ? (
                           <p className="text-xs text-green-600">Payé le {new Date(balancePayment.paidAt!).toLocaleDateString('fr-FR')}</p>
                         ) : (
-                          <p className="text-xs text-orange-500">En attente</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-xs text-orange-500">En attente</p>
+                            {remainingBalance > 0 && (
+                              <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={() => handleMarkPaid(r.id, remainingBalance, 'balance')}>
+                                Encaisser
+                              </Button>
+                            )}
+                          </div>
                         )}
                       </div>
                     </TableCell>
@@ -217,7 +248,14 @@ export const PaymentsPage = () => {
                            cautionPayment.status === 'refunded' ? 'Restituée' : 'En attente'}
                         </Badge>
                       ) : (
-                        <Badge variant="outline">—</Badge>
+                        <div className="flex flex-col items-start gap-1">
+                          <Badge variant="outline">—</Badge>
+                          {r.securityDeposit > 0 && (
+                            <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={() => handleMarkPaid(r.id, r.securityDeposit, 'security_deposit')}>
+                              Bloquer
+                            </Button>
+                          )}
+                        </div>
                       )}
                     </TableCell>
                     <TableCell className="font-bold">{r.totalAmount.toLocaleString()} DA</TableCell>
