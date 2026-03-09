@@ -414,6 +414,11 @@ export function BookingModal({
               <span className="font-bold text-amber">
                 {vehicle.pricePerDay.toLocaleString()} DA
               </span>
+              {isDiaspora && (
+                <span className="block text-xs text-muted-foreground">
+                  ≈ {convert(vehicle.pricePerDay)} €
+                </span>
+              )}
               <span className="text-sm text-muted-foreground">{t.perDay}</span>
             </div>
           </div>
