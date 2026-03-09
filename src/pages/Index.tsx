@@ -26,6 +26,7 @@ const Index = () => {
   const handleBookNow = () => {
     setPreSelectedVehicle(undefined);
     setPreSelectedDates(undefined);
+    setIsDiaspora(false);
     setIsBookingOpen(true);
   };
 
@@ -39,18 +40,23 @@ const Index = () => {
   const handleSearch = (pickupDate: Date, returnDate: Date, location: string) => {
     setPreSelectedDates({ pickup: pickupDate, return: returnDate, location });
     setPreSelectedVehicle(undefined);
+    setIsDiaspora(false);
     setIsBookingOpen(true);
   };
 
   const handleBookVehicle = (vehicle: Vehicle) => {
     setPreSelectedVehicle(vehicle);
     setPreSelectedDates(undefined);
+    setIsDiaspora(false);
     setIsBookingOpen(true);
   };
+
+  const [isDiaspora, setIsDiaspora] = useState(false);
 
   const handleBookFromAbroad = () => {
     setPreSelectedVehicle(undefined);
     setPreSelectedDates(undefined);
+    setIsDiaspora(true);
     setIsBookingOpen(true);
   };
 
@@ -80,10 +86,11 @@ const Index = () => {
       
       <BookingModal
         isOpen={isBookingOpen}
-        onClose={() => setIsBookingOpen(false)}
+        onClose={() => { setIsBookingOpen(false); setIsDiaspora(false); }}
         language={language}
         preSelectedVehicle={preSelectedVehicle}
         preSelectedDates={preSelectedDates}
+        isDiaspora={isDiaspora}
       />
     </div>
   );

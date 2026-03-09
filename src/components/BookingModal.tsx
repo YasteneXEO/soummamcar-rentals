@@ -28,6 +28,7 @@ interface BookingModalProps {
     return: Date;
     location: string;
   };
+  isDiaspora?: boolean;
 }
 
 type BookingStep = 1 | 2 | 3 | 4;
@@ -68,6 +69,11 @@ const translations = {
     paymentInstructions: "Instructions de paiement des arrhes",
     baridimobInstruction: "Veuillez effectuer le virement des arrhes via BaridiMob au RIB suivant:",
     rib: "00799999004045678900148",
+    internationalInstruction: "Veuillez effectuer le virement des arrhes par virement bancaire international:",
+    bankName: "Banque: CPA Béjaïa",
+    iban: "IBAN: DZ00 0799 9990 0404 5678 9014 8",
+    swift: "SWIFT/BIC: CPAADZAL",
+    accountHolder: "Titulaire: SaharaCar Location",
     termsLabel: "J'ai lu et j'accepte les conditions de location",
     confirm: "Confirmer la réservation",
     confirmed: "Réservation confirmée !",
@@ -112,6 +118,11 @@ const translations = {
     paymentInstructions: "Deposit payment instructions",
     baridimobInstruction: "Please transfer the deposit via BaridiMob to the following RIB:",
     rib: "00799999004045678900148",
+    internationalInstruction: "Please transfer the deposit via international bank transfer:",
+    bankName: "Bank: CPA Béjaïa",
+    iban: "IBAN: DZ00 0799 9990 0404 5678 9014 8",
+    swift: "SWIFT/BIC: CPAADZAL",
+    accountHolder: "Account holder: SaharaCar Location",
     termsLabel: "I have read and accept the rental terms",
     confirm: "Confirm booking",
     confirmed: "Booking confirmed!",
@@ -156,6 +167,11 @@ const translations = {
     paymentInstructions: "تعليمات دفع العربون",
     baridimobInstruction: "يرجى تحويل العربون عبر بريدي موب إلى الحساب التالي:",
     rib: "00799999004045678900148",
+    internationalInstruction: "يرجى تحويل العربون عبر تحويل بنكي دولي:",
+    bankName: "البنك: CPA بجاية",
+    iban: "IBAN: DZ00 0799 9990 0404 5678 9014 8",
+    swift: "SWIFT/BIC: CPAADZAL",
+    accountHolder: "صاحب الحساب: SaharaCar Location",
     termsLabel: "لقد قرأت وأوافق على شروط الإيجار",
     confirm: "تأكيد الحجز",
     confirmed: "تم تأكيد الحجز!",
@@ -175,6 +191,7 @@ export function BookingModal({
   language,
   preSelectedVehicle,
   preSelectedDates,
+  isDiaspora = false,
 }: BookingModalProps) {
   const [step, setStep] = useState<BookingStep>(1);
   const [pickupDate, setPickupDate] = useState<Date | undefined>(preSelectedDates?.pickup);
@@ -519,10 +536,24 @@ export function BookingModal({
 
         <div className="bg-amber/10 p-4 rounded-lg">
           <h4 className="font-semibold text-sm mb-2">{t.paymentInstructions}</h4>
-          <p className="text-sm text-muted-foreground mb-2">{t.baridimobInstruction}</p>
-          <code className="block bg-background p-2 rounded text-center font-mono text-sm">
-            {t.rib}
-          </code>
+          {isDiaspora ? (
+            <>
+              <p className="text-sm text-muted-foreground mb-2">{t.internationalInstruction}</p>
+              <div className="bg-background p-3 rounded space-y-1 text-sm font-mono">
+                <p>{t.bankName}</p>
+                <p>{t.iban}</p>
+                <p>{t.swift}</p>
+                <p>{t.accountHolder}</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground mb-2">{t.baridimobInstruction}</p>
+              <code className="block bg-background p-2 rounded text-center font-mono text-sm">
+                {t.rib}
+              </code>
+            </>
+          )}
           <p className="text-sm text-amber font-medium mt-2">
             {t.deposit}: {depositAmount.toLocaleString()} DA
           </p>
