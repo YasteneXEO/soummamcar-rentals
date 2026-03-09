@@ -191,6 +191,7 @@ export function BookingModal({
   language,
   preSelectedVehicle,
   preSelectedDates,
+  isDiaspora = false,
 }: BookingModalProps) {
   const [step, setStep] = useState<BookingStep>(1);
   const [pickupDate, setPickupDate] = useState<Date | undefined>(preSelectedDates?.pickup);
