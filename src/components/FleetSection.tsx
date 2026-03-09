@@ -120,6 +120,9 @@ export function FleetSection({ language, onBookVehicle }: FleetSectionProps) {
                       {vehicle.pricePerDay.toLocaleString()}
                     </span>
                     <span className="text-sm text-muted-foreground"> DA{t.perDay}</span>
+                    <span className="block text-xs text-muted-foreground">
+                      ≈ {convert(vehicle.pricePerDay)} €{t.perDay}
+                    </span>
                   </div>
                   <Button
                     onClick={() => onBookVehicle(vehicle)}
