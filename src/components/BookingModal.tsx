@@ -523,7 +523,7 @@ export function BookingModal({
           </div>
           <div className="flex justify-between">
             <span>{t.dailyRate}</span>
-            <span className="font-medium">{selectedVehicle?.pricePerDay.toLocaleString()} DA</span>
+            <span className="font-medium">{selectedVehicle?.pricePerDay.toLocaleString()} DA{eurLabel(selectedVehicle?.pricePerDay || 0)}</span>
           </div>
           <div className="border-t border-border pt-3">
             <div className="flex justify-between">
