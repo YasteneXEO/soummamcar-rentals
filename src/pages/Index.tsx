@@ -40,6 +40,7 @@ const Index = () => {
   const handleSearch = (pickupDate: Date, returnDate: Date, location: string) => {
     setPreSelectedDates({ pickup: pickupDate, return: returnDate, location });
     setPreSelectedVehicle(undefined);
+    setIsDiaspora(false);
     setIsBookingOpen(true);
   };
 
