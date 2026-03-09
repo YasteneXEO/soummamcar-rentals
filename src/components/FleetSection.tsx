@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Users, Settings, Snowflake } from "lucide-react";
+import { useExchangeRate } from "@/hooks/useExchangeRate";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { vehicles, Vehicle } from "@/lib/vehiclesData";
@@ -45,6 +46,7 @@ const translations = {
 export function FleetSection({ language, onBookVehicle }: FleetSectionProps) {
   const t = translations[language];
   const isRTL = language === "ar";
+  const { convert } = useExchangeRate(true);
 
   return (
     <section id="fleet" className="py-20 bg-background" dir={isRTL ? "rtl" : "ltr"}>
@@ -118,6 +120,9 @@ export function FleetSection({ language, onBookVehicle }: FleetSectionProps) {
                       {vehicle.pricePerDay.toLocaleString()}
                     </span>
                     <span className="text-sm text-muted-foreground"> DA{t.perDay}</span>
+                    <span className="block text-xs text-muted-foreground">
+                      ≈ {convert(vehicle.pricePerDay)} €{t.perDay}
+                    </span>
                   </div>
                   <Button
                     onClick={() => onBookVehicle(vehicle)}

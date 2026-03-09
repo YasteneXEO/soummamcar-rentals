@@ -212,7 +212,7 @@ export function BookingModal({
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [bookingRef, setBookingRef] = useState("");
 
-  const { convert } = useExchangeRate(isDiaspora);
+  const { convert } = useExchangeRate(true);
   const t = translations[language];
   const isRTL = language === "ar";
 
@@ -224,8 +224,7 @@ export function BookingModal({
   const cautionAmount = 20000;
   const totalOnPickup = subtotal - depositAmount + cautionAmount;
 
-  const eurLabel = (amountDZD: number) =>
-    isDiaspora ? ` (≈ ${convert(amountDZD)} €)` : "";
+  const eurLabel = (amountDZD: number) => ` (≈ ${convert(amountDZD)} €)`;
 
   const availableVehicles = vehicles.filter((v) => v.available);
 
@@ -414,11 +413,9 @@ export function BookingModal({
               <span className="font-bold text-amber">
                 {vehicle.pricePerDay.toLocaleString()} DA
               </span>
-              {isDiaspora && (
-                <span className="block text-xs text-muted-foreground">
-                  ≈ {convert(vehicle.pricePerDay)} €
-                </span>
-              )}
+              <span className="block text-xs text-muted-foreground">
+                ≈ {convert(vehicle.pricePerDay)} €
+              </span>
               <span className="text-sm text-muted-foreground">{t.perDay}</span>
             </div>
           </div>
