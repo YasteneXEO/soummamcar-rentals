@@ -536,10 +536,24 @@ export function BookingModal({
 
         <div className="bg-amber/10 p-4 rounded-lg">
           <h4 className="font-semibold text-sm mb-2">{t.paymentInstructions}</h4>
-          <p className="text-sm text-muted-foreground mb-2">{t.baridimobInstruction}</p>
-          <code className="block bg-background p-2 rounded text-center font-mono text-sm">
-            {t.rib}
-          </code>
+          {isDiaspora ? (
+            <>
+              <p className="text-sm text-muted-foreground mb-2">{t.internationalInstruction}</p>
+              <div className="bg-background p-3 rounded space-y-1 text-sm font-mono">
+                <p>{t.bankName}</p>
+                <p>{t.iban}</p>
+                <p>{t.swift}</p>
+                <p>{t.accountHolder}</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground mb-2">{t.baridimobInstruction}</p>
+              <code className="block bg-background p-2 rounded text-center font-mono text-sm">
+                {t.rib}
+              </code>
+            </>
+          )}
           <p className="text-sm text-amber font-medium mt-2">
             {t.deposit}: {depositAmount.toLocaleString()} DA
           </p>
