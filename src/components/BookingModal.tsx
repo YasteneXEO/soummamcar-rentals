@@ -545,11 +545,11 @@ export function BookingModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div
-        className="bg-card w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden"
+        className="bg-card w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[calc(100vh-40px)]"
         dir={isRTL ? "rtl" : "ltr"}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center justify-between p-4 border-b border-border flex-shrink-0">
           <h2 className="text-xl font-semibold">{t.title}</h2>
           <button
             onClick={handleClose}
@@ -560,7 +560,7 @@ export function BookingModal({
         </div>
 
         {/* Body */}
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto flex-1">
           {!isConfirmed && renderStepIndicator()}
           
           {step === 1 && renderStep1()}
@@ -570,7 +570,7 @@ export function BookingModal({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-between gap-4 p-4 border-t border-border">
+        <div className="flex justify-between gap-4 p-4 border-t border-border flex-shrink-0">
           {!isConfirmed ? (
             <>
               {step > 1 ? (
