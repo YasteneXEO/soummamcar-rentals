@@ -142,8 +142,8 @@ export const AdminDashboard = () => {
                 {kpi.description}
               </p>
               <div className="flex items-center mt-2">
-                <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
-                <span className="text-xs text-green-600">{kpi.trend}</span>
+                <TrendingUp className="h-3 w-3 text-green-600 dark:text-green-400 mr-1" />
+                <span className="text-xs text-green-600 dark:text-green-400">{kpi.trend}</span>
               </div>
             </CardContent>
           </Card>

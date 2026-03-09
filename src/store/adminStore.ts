@@ -152,14 +152,344 @@ interface AdminStore {
   updateConditionReport: (id: string, updates: Partial<ConditionReport>) => void;
 }
 
-// Sample data - will be populated later
-const sampleVehicles: Vehicle[] = [];
-const sampleClients: Client[] = [];
-const sampleReservations: Reservation[] = [];
-const samplePayments: Payment[] = [];
-const sampleMaintenanceRecords: MaintenanceRecord[] = [];
-const sampleContracts: Contract[] = [];
-const sampleConditionReports: ConditionReport[] = [];
+// Sample data
+const sampleVehicles: Vehicle[] = [
+  {
+    id: '1',
+    name: 'Dacia Logan',
+    plateNumber: '06-123-45',
+    brand: 'Dacia',
+    model: 'Logan',
+    year: 2020,
+    status: 'available',
+    image: '/src/assets/dacia-logan.jpg',
+    dailyRate: 4500,
+    currentKm: 85000,
+    nextServiceKm: 90000,
+    fuelType: 'essence',
+    transmission: 'manual',
+    seats: 5,
+    airConditioning: true,
+    insuranceExpiry: '2024-08-15',
+    controleTechniqueExpiry: '2024-10-20',
+    vignetteExpiry: '2024-12-31',
+    registrationDocument: 'DOC123456789'
+  },
+  {
+    id: '2',
+    name: 'Renault Symbol',
+    plateNumber: '06-789-12',
+    brand: 'Renault',
+    model: 'Symbol',
+    year: 2019,
+    status: 'rented',
+    image: '/src/assets/renault-symbol.jpg',
+    dailyRate: 4000,
+    currentKm: 92000,
+    nextServiceKm: 95000,
+    fuelType: 'essence',
+    transmission: 'manual',
+    seats: 5,
+    airConditioning: true,
+    insuranceExpiry: '2024-06-30',
+    controleTechniqueExpiry: '2024-09-15',
+    vignetteExpiry: '2024-12-31',
+    registrationDocument: 'DOC987654321'
+  },
+  {
+    id: '3',
+    name: 'Hyundai i10',
+    plateNumber: '06-456-78',
+    brand: 'Hyundai',
+    model: 'i10',
+    year: 2021,
+    status: 'available',
+    image: '/src/assets/hyundai-i10.jpg',
+    dailyRate: 3500,
+    currentKm: 35000,
+    nextServiceKm: 40000,
+    fuelType: 'essence',
+    transmission: 'manual',
+    seats: 4,
+    airConditioning: true,
+    insuranceExpiry: '2024-11-20',
+    controleTechniqueExpiry: '2025-01-10',
+    vignetteExpiry: '2024-12-31',
+    registrationDocument: 'DOC456789123'
+  }
+];
+
+const sampleClients: Client[] = [
+  {
+    id: '1',
+    fullName: 'Ahmed Benali',
+    phone: '+213 555 123 456',
+    whatsapp: '+213 555 123 456',
+    email: 'ahmed.benali@email.com',
+    wilaya: 'Béjaïa',
+    idNumber: '1234567890123456',
+    licenseNumber: 'BJ123456789',
+    rating: 5,
+    status: 'reliable',
+    totalRentals: 3,
+    lastRental: '2024-11-15',
+    internalNotes: 'Client fiable, toujours ponctuel aux rendez-vous.',
+    createdAt: '2023-08-15T10:00:00Z'
+  },
+  {
+    id: '2',
+    fullName: 'Fatima Kouadri',
+    phone: '+213 666 789 123',
+    whatsapp: '+213 666 789 123',
+    email: 'fatima.kouadri@email.com',
+    wilaya: 'Béjaïa',
+    idNumber: '2345678901234567',
+    licenseNumber: 'BJ987654321',
+    rating: 4,
+    status: 'reliable',
+    totalRentals: 2,
+    lastRental: '2024-10-20',
+    internalNotes: 'Conduite prudente, véhicule rendu propre.',
+    createdAt: '2023-09-20T14:30:00Z'
+  },
+  {
+    id: '3',
+    fullName: 'Mohamed Amrani',
+    phone: '+213 777 456 789',
+    email: 'mohamed.amrani@email.com',
+    wilaya: 'Béjaïa',
+    idNumber: '3456789012345678',
+    licenseNumber: 'BJ555666777',
+    rating: 3,
+    status: 'monitor',
+    totalRentals: 1,
+    lastRental: '2024-09-10',
+    internalNotes: 'Premier client, à surveiller pour les prochaines locations.',
+    createdAt: '2024-08-01T09:15:00Z'
+  },
+  {
+    id: '4',
+    fullName: 'Khadija Benaissa',
+    phone: '+213 555 987 654',
+    whatsapp: '+213 555 987 654',
+    email: 'khadija.benaissa@email.com',
+    wilaya: 'Béjaïa',
+    idNumber: '4567890123456789',
+    licenseNumber: 'BJ111222333',
+    rating: 5,
+    status: 'reliable',
+    totalRentals: 4,
+    lastRental: '2024-12-01',
+    internalNotes: 'Excellente cliente, recommandations fréquentes.',
+    createdAt: '2023-06-10T16:45:00Z'
+  },
+  {
+    id: '5',
+    fullName: 'Youcef Meziani',
+    phone: '+213 666 321 654',
+    email: 'youcef.meziani@email.com',
+    wilaya: 'Béjaïa',
+    idNumber: '5678901234567890',
+    licenseNumber: 'BJ444555666',
+    rating: 2,
+    status: 'monitor',
+    totalRentals: 2,
+    lastRental: '2024-07-15',
+    internalNotes: 'Retards fréquents, à surveiller.',
+    createdAt: '2024-03-12T11:20:00Z'
+  }
+];
+
+const sampleReservations: Reservation[] = [
+  {
+    id: '1',
+    referenceNumber: 'SC240001',
+    clientId: '2',
+    vehicleId: '2',
+    pickupDate: '2024-12-10T09:00:00Z',
+    returnDate: '2024-12-13T18:00:00Z',
+    pickupLocation: 'Agence Béjaïa centre',
+    status: 'in_progress',
+    dailyRate: 4000,
+    totalDays: 3,
+    subtotal: 12000,
+    deposit: 3000,
+    securityDeposit: 15000,
+    totalAmount: 15000,
+    createdAt: '2024-12-05T10:30:00Z'
+  },
+  {
+    id: '2',
+    referenceNumber: 'SC240002',
+    clientId: '1',
+    vehicleId: '1',
+    pickupDate: '2024-12-15T08:00:00Z',
+    returnDate: '2024-12-18T17:00:00Z',
+    pickupLocation: 'Aéroport Soummam',
+    status: 'confirmed',
+    dailyRate: 4500,
+    totalDays: 3,
+    subtotal: 13500,
+    deposit: 3375,
+    securityDeposit: 20000,
+    totalAmount: 16875,
+    specialRequests: 'Livraison aéroport demandée',
+    createdAt: '2024-12-08T15:20:00Z'
+  },
+  {
+    id: '3',
+    referenceNumber: 'SC240003',
+    clientId: '4',
+    vehicleId: '3',
+    pickupDate: '2024-11-25T10:00:00Z',
+    returnDate: '2024-11-28T16:00:00Z',
+    pickupLocation: 'Agence Béjaïa centre',
+    status: 'completed',
+    dailyRate: 3500,
+    totalDays: 3,
+    subtotal: 10500,
+    deposit: 2625,
+    securityDeposit: 15000,
+    totalAmount: 13125,
+    createdAt: '2024-11-20T12:10:00Z'
+  }
+];
+
+const samplePayments: Payment[] = [
+  {
+    id: '1',
+    reservationId: '1',
+    type: 'deposit',
+    amount: 3000,
+    method: 'baridimob',
+    status: 'paid',
+    paidAt: '2024-12-05T11:00:00Z'
+  },
+  {
+    id: '2',
+    reservationId: '1',
+    type: 'security_deposit',
+    amount: 15000,
+    method: 'cash',
+    status: 'paid',
+    paidAt: '2024-12-10T09:30:00Z'
+  },
+  {
+    id: '3',
+    reservationId: '2',
+    type: 'deposit',
+    amount: 3375,
+    method: 'baridimob',
+    status: 'paid',
+    paidAt: '2024-12-08T15:45:00Z'
+  },
+  {
+    id: '4',
+    reservationId: '3',
+    type: 'deposit',
+    amount: 2625,
+    method: 'baridimob',
+    status: 'paid',
+    paidAt: '2024-11-20T12:30:00Z'
+  },
+  {
+    id: '5',
+    reservationId: '3',
+    type: 'balance',
+    amount: 7875,
+    method: 'cash',
+    status: 'paid',
+    paidAt: '2024-11-25T10:15:00Z'
+  },
+  {
+    id: '6',
+    reservationId: '3',
+    type: 'security_deposit',
+    amount: 15000,
+    method: 'cash',
+    status: 'refunded',
+    paidAt: '2024-11-28T16:30:00Z'
+  }
+];
+
+const sampleMaintenanceRecords: MaintenanceRecord[] = [
+  {
+    id: '1',
+    vehicleId: '1',
+    date: '2024-10-15',
+    km: 80000,
+    type: 'Révision complète',
+    cost: 15000,
+    notes: 'Vidange, filtres, courroie de distribution',
+    nextServiceDue: '2024-12-15'
+  },
+  {
+    id: '2',
+    vehicleId: '2',
+    date: '2024-09-20',
+    km: 88000,
+    type: 'Pneus neufs',
+    cost: 25000,
+    notes: 'Remplacement des 4 pneus'
+  },
+  {
+    id: '3',
+    vehicleId: '3',
+    date: '2024-11-05',
+    km: 32000,
+    type: 'Contrôle technique',
+    cost: 3000,
+    notes: 'Contrôle technique validé'
+  }
+];
+
+const sampleContracts: Contract[] = [
+  {
+    id: '1',
+    reservationId: '1',
+    status: 'signed',
+    createdAt: '2024-12-09T14:00:00Z',
+    signedAt: '2024-12-10T09:00:00Z'
+  },
+  {
+    id: '2',
+    reservationId: '3',
+    status: 'completed',
+    createdAt: '2024-11-24T16:30:00Z',
+    signedAt: '2024-11-25T10:00:00Z'
+  }
+];
+
+const sampleConditionReports: ConditionReport[] = [
+  {
+    id: '1',
+    reservationId: '3',
+    type: 'pickup',
+    photos: {
+      front_left: '/placeholder-car-photo.jpg',
+      front_right: '/placeholder-car-photo.jpg',
+      dashboard: '/placeholder-dashboard.jpg'
+    },
+    kmReading: 32000,
+    fuelLevel: 'full',
+    damageNotes: 'RAS - Véhicule en excellent état',
+    createdAt: '2024-11-25T10:00:00Z'
+  },
+  {
+    id: '2',
+    reservationId: '3',
+    type: 'return',
+    photos: {
+      front_left: '/placeholder-car-photo.jpg',
+      front_right: '/placeholder-car-photo.jpg',
+      dashboard: '/placeholder-dashboard.jpg'
+    },
+    kmReading: 32250,
+    fuelLevel: '3/4',
+    damageNotes: 'Léger éclat sur pare-brise avant droit',
+    createdAt: '2024-11-28T16:00:00Z'
+  }
+];
 
 export const useAdminStore = create<AdminStore>((set, get) => ({
   // Auth
