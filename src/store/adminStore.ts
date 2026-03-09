@@ -64,9 +64,11 @@ export interface Payment {
   type: 'deposit' | 'balance' | 'security_deposit';
   amount: number;
   method: 'baridimob' | 'cib' | 'cash';
-  status: 'pending' | 'paid' | 'refunded';
+  status: 'pending' | 'paid' | 'refunded' | 'partially_retained' | 'retained' | 'disputed';
   paidAt?: string;
   notes?: string;
+  retainedAmount?: number;
+  retainedReason?: string;
 }
 
 export interface MaintenanceRecord {
