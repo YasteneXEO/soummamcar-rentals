@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Users, Settings, Snowflake } from "lucide-react";
+import { useExchangeRate } from "@/hooks/useExchangeRate";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { vehicles, Vehicle } from "@/lib/vehiclesData";
