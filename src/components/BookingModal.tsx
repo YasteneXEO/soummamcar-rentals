@@ -224,8 +224,7 @@ export function BookingModal({
   const cautionAmount = 20000;
   const totalOnPickup = subtotal - depositAmount + cautionAmount;
 
-  const eurLabel = (amountDZD: number) =>
-    isDiaspora ? ` (≈ ${convert(amountDZD)} €)` : "";
+  const eurLabel = (amountDZD: number) => ` (≈ ${convert(amountDZD)} €)`;
 
   const availableVehicles = vehicles.filter((v) => v.available);
 
