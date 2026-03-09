@@ -37,6 +37,21 @@ export const PaymentsPage = () => {
     toast({ title: 'Export PDF', description: 'La fenêtre d\'impression est ouverte.' });
   };
 
+  const handleMarkPaid = (reservationId: string, amount: number, type: 'deposit' | 'balance' | 'security_deposit') => {
+    addPayment({
+      reservationId,
+      type,
+      amount,
+      method: type === 'deposit' ? 'baridimob' : 'cash',
+      status: 'paid',
+      paidAt: new Date().toISOString()
+    });
+    toast({ 
+      title: 'Paiement effectué', 
+      description: `Le paiement de ${amount.toLocaleString()} DA a été enregistré.` 
+    });
+  };
+
   // Summary calculations
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
