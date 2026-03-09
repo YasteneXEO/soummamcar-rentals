@@ -528,7 +528,7 @@ export function BookingModal({
           <div className="border-t border-border pt-3">
             <div className="flex justify-between">
               <span>{t.subtotal}</span>
-              <span className="font-medium">{subtotal.toLocaleString()} DA</span>
+              <span className="font-medium">{subtotal.toLocaleString()} DA{eurLabel(subtotal)}</span>
             </div>
             <div className="flex justify-between text-amber">
               <span>{t.deposit}</span>
