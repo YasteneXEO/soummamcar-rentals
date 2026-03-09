@@ -212,7 +212,7 @@ export function BookingModal({
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [bookingRef, setBookingRef] = useState("");
 
-  const { convert } = useExchangeRate(isDiaspora);
+  const { convert } = useExchangeRate(true);
   const t = translations[language];
   const isRTL = language === "ar";
 
