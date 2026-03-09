@@ -47,6 +47,7 @@ const Index = () => {
   const handleBookVehicle = (vehicle: Vehicle) => {
     setPreSelectedVehicle(vehicle);
     setPreSelectedDates(undefined);
+    setIsDiaspora(false);
     setIsBookingOpen(true);
   };
 
