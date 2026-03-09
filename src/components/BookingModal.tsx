@@ -28,6 +28,7 @@ interface BookingModalProps {
     return: Date;
     location: string;
   };
+  isDiaspora?: boolean;
 }
 
 type BookingStep = 1 | 2 | 3 | 4;
