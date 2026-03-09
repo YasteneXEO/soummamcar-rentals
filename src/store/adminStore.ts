@@ -315,7 +315,7 @@ const sampleReservations: Reservation[] = [
     subtotal: 12000,
     deposit: 3000,
     securityDeposit: 15000,
-    totalAmount: 15000,
+    totalAmount: 27000, // subtotal (12000) + securityDeposit (15000)
     createdAt: '2024-12-05T10:30:00Z'
   },
   {
