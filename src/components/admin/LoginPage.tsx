@@ -51,11 +51,11 @@ export const LoginPage = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-2">
           <div className="flex items-center justify-center mb-4">
-            <div className="text-3xl font-bold text-navy">
+            <div className="text-3xl font-bold text-primary">
               SoummamCar
             </div>
           </div>
-          <CardTitle className="text-2xl text-navy">Administration</CardTitle>
+          <CardTitle className="text-2xl text-primary">Administration</CardTitle>
           <CardDescription>
             Connectez-vous pour accéder au tableau de bord
           </CardDescription>
