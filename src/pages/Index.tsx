@@ -48,9 +48,12 @@ const Index = () => {
     setIsBookingOpen(true);
   };
 
+  const [isDiaspora, setIsDiaspora] = useState(false);
+
   const handleBookFromAbroad = () => {
     setPreSelectedVehicle(undefined);
     setPreSelectedDates(undefined);
+    setIsDiaspora(true);
     setIsBookingOpen(true);
   };
 
