@@ -101,13 +101,13 @@ export const AdminDashboard = () => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'text-red-600';
+        return 'text-destructive';
       case 'medium':
-        return 'text-yellow-600';
+        return 'text-amber-600 dark:text-amber-400';
       case 'low':
-        return 'text-green-600';
+        return 'text-green-600 dark:text-green-400';
       default:
-        return 'text-gray-600';
+        return 'text-muted-foreground';
     }
   };
 
