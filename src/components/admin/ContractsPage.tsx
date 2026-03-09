@@ -127,6 +127,7 @@ function ConditionReportForm({
   const [kmReading, setKmReading] = useState('');
   const [fuelLevel, setFuelLevel] = useState<ConditionReport['fuelLevel']>('full');
   const [damageNotes, setDamageNotes] = useState('');
+  const [photos, setPhotos] = useState<Record<string, string>>({});
 
   const photoSlots = [
     { key: 'front_left', label: 'Avant gauche' },
@@ -139,11 +140,18 @@ function ConditionReportForm({
     { key: 'trunk', label: 'Coffre' },
   ];
 
+  const handlePhotoUpload = (key: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const url = URL.createObjectURL(e.target.files[0]);
+      setPhotos(prev => ({ ...prev, [key]: url }));
+    }
+  };
+
   const handleSave = () => {
     addConditionReport({
       reservationId,
       type,
-      photos: {},
+      photos,
       kmReading: parseInt(kmReading) || 0,
       fuelLevel,
       damageNotes,
