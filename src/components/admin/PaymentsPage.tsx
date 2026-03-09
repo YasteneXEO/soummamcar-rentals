@@ -229,7 +229,14 @@ export const PaymentsPage = () => {
                         {balancePayment ? (
                           <p className="text-xs text-green-600">Payé le {new Date(balancePayment.paidAt!).toLocaleDateString('fr-FR')}</p>
                         ) : (
-                          <p className="text-xs text-orange-500">En attente</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-xs text-orange-500">En attente</p>
+                            {remainingBalance > 0 && (
+                              <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={() => handleMarkPaid(r.id, remainingBalance, 'balance')}>
+                                Encaisser
+                              </Button>
+                            )}
+                          </div>
                         )}
                       </div>
                     </TableCell>
