@@ -86,10 +86,11 @@ const Index = () => {
       
       <BookingModal
         isOpen={isBookingOpen}
-        onClose={() => setIsBookingOpen(false)}
+        onClose={() => { setIsBookingOpen(false); setIsDiaspora(false); }}
         language={language}
         preSelectedVehicle={preSelectedVehicle}
         preSelectedDates={preSelectedDates}
+        isDiaspora={isDiaspora}
       />
     </div>
   );
