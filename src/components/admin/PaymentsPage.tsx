@@ -207,10 +207,19 @@ export const PaymentsPage = () => {
                     <TableCell>
                       <div>
                         <p className="font-semibold">{r.deposit.toLocaleString()} DA</p>
-                        {depositPayment && (
+                        {depositPayment ? (
                           <p className="text-xs text-muted-foreground">
                             {PAYMENT_METHOD_LABELS[depositPayment.method]} • {depositPayment.paidAt ? new Date(depositPayment.paidAt).toLocaleDateString('fr-FR') : '—'}
                           </p>
+                        ) : (
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-xs text-orange-500">En attente</p>
+                            {r.deposit > 0 && (
+                              <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={() => handleMarkPaid(r.id, r.deposit, 'deposit')}>
+                                Encaisser
+                              </Button>
+                            )}
+                          </div>
                         )}
                       </div>
                     </TableCell>
