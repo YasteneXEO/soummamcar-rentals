@@ -248,7 +248,14 @@ export const PaymentsPage = () => {
                            cautionPayment.status === 'refunded' ? 'Restituée' : 'En attente'}
                         </Badge>
                       ) : (
-                        <Badge variant="outline">—</Badge>
+                        <div className="flex flex-col items-start gap-1">
+                          <Badge variant="outline">—</Badge>
+                          {r.securityDeposit > 0 && (
+                            <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={() => handleMarkPaid(r.id, r.securityDeposit, 'security_deposit')}>
+                              Bloquer
+                            </Button>
+                          )}
+                        </div>
                       )}
                     </TableCell>
                     <TableCell className="font-bold">{r.totalAmount.toLocaleString()} DA</TableCell>

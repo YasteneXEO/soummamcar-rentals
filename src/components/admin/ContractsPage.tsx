@@ -190,12 +190,24 @@ function ConditionReportForm({
       
       <div>
         <Label>Photos ({type === 'pickup' ? 'Départ' : 'Retour'})</Label>
-        <div className="grid grid-cols-4 gap-2 mt-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
           {photoSlots.map(slot => (
-            <div key={slot.key} className="border-2 border-dashed rounded-lg p-3 text-center hover:border-primary transition-colors cursor-pointer">
-              <Camera className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
+            <Label key={slot.key} className="border-2 border-dashed rounded-lg p-3 text-center hover:border-primary transition-colors cursor-pointer block relative">
+              <input 
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                onChange={(e) => handlePhotoUpload(slot.key, e)}
+              />
+              {photos[slot.key] ? (
+                <div className="w-full h-16 mb-1 overflow-hidden rounded">
+                  <img src={photos[slot.key]} alt={slot.label} className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <Camera className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
+              )}
               <p className="text-xs text-muted-foreground">{slot.label}</p>
-            </div>
+            </Label>
           ))}
         </div>
       </div>
