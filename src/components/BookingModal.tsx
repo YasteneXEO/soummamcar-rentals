@@ -2,6 +2,7 @@ import { useState } from "react";
 import { format, differenceInDays } from "date-fns";
 import { fr, enUS, ar } from "date-fns/locale";
 import { X, Calendar, MapPin, User, CheckCircle } from "lucide-react";
+import { useExchangeRate } from "@/hooks/useExchangeRate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
