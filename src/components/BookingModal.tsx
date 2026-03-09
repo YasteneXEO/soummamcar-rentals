@@ -566,7 +566,7 @@ export function BookingModal({
             </>
           )}
           <p className="text-sm text-amber font-medium mt-2">
-            {t.deposit}: {depositAmount.toLocaleString()} DA
+            {t.deposit}: {depositAmount.toLocaleString()} DA{eurLabel(depositAmount)}
           </p>
         </div>
 
