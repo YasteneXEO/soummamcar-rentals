@@ -2,6 +2,7 @@ import { useState } from "react";
 import { format, differenceInDays } from "date-fns";
 import { fr, enUS, ar } from "date-fns/locale";
 import { X, Calendar, MapPin, User, CheckCircle } from "lucide-react";
+import { useExchangeRate } from "@/hooks/useExchangeRate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -211,6 +212,7 @@ export function BookingModal({
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [bookingRef, setBookingRef] = useState("");
 
+  const { convert } = useExchangeRate(isDiaspora);
   const t = translations[language];
   const isRTL = language === "ar";
 
@@ -222,7 +224,11 @@ export function BookingModal({
   const cautionAmount = 20000;
   const totalOnPickup = subtotal - depositAmount + cautionAmount;
 
+  const eurLabel = (amountDZD: number) =>
+    isDiaspora ? ` (≈ ${convert(amountDZD)} €)` : "";
+
   const availableVehicles = vehicles.filter((v) => v.available);
+
 
   const canProceedStep1 = pickupDate && returnDate && location;
   const canProceedStep2 = selectedVehicle;
@@ -408,6 +414,11 @@ export function BookingModal({
               <span className="font-bold text-amber">
                 {vehicle.pricePerDay.toLocaleString()} DA
               </span>
+              {isDiaspora && (
+                <span className="block text-xs text-muted-foreground">
+                  ≈ {convert(vehicle.pricePerDay)} €
+                </span>
+              )}
               <span className="text-sm text-muted-foreground">{t.perDay}</span>
             </div>
           </div>
@@ -512,24 +523,24 @@ export function BookingModal({
           </div>
           <div className="flex justify-between">
             <span>{t.dailyRate}</span>
-            <span className="font-medium">{selectedVehicle?.pricePerDay.toLocaleString()} DA</span>
+            <span className="font-medium">{selectedVehicle?.pricePerDay.toLocaleString()} DA{eurLabel(selectedVehicle?.pricePerDay || 0)}</span>
           </div>
           <div className="border-t border-border pt-3">
             <div className="flex justify-between">
               <span>{t.subtotal}</span>
-              <span className="font-medium">{subtotal.toLocaleString()} DA</span>
+              <span className="font-medium">{subtotal.toLocaleString()} DA{eurLabel(subtotal)}</span>
             </div>
             <div className="flex justify-between text-amber">
               <span>{t.deposit}</span>
-              <span className="font-medium">-{depositAmount.toLocaleString()} DA</span>
+              <span className="font-medium">-{depositAmount.toLocaleString()} DA{eurLabel(depositAmount)}</span>
             </div>
             <div className="flex justify-between">
               <span>{t.caution}</span>
-              <span className="font-medium">+{cautionAmount.toLocaleString()} DA</span>
+              <span className="font-medium">+{cautionAmount.toLocaleString()} DA{eurLabel(cautionAmount)}</span>
             </div>
             <div className="flex justify-between text-lg font-bold pt-2 border-t border-border mt-2">
               <span>{t.totalOnPickup}</span>
-              <span>{totalOnPickup.toLocaleString()} DA</span>
+              <span>{totalOnPickup.toLocaleString()} DA{eurLabel(totalOnPickup)}</span>
             </div>
           </div>
         </div>
@@ -555,7 +566,7 @@ export function BookingModal({
             </>
           )}
           <p className="text-sm text-amber font-medium mt-2">
-            {t.deposit}: {depositAmount.toLocaleString()} DA
+            {t.deposit}: {depositAmount.toLocaleString()} DA{eurLabel(depositAmount)}
           </p>
         </div>
 
