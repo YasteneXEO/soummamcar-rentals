@@ -536,7 +536,7 @@ export function BookingModal({
             </div>
             <div className="flex justify-between">
               <span>{t.caution}</span>
-              <span className="font-medium">+{cautionAmount.toLocaleString()} DA</span>
+              <span className="font-medium">+{cautionAmount.toLocaleString()} DA{eurLabel(cautionAmount)}</span>
             </div>
             <div className="flex justify-between text-lg font-bold pt-2 border-t border-border mt-2">
               <span>{t.totalOnPickup}</span>
