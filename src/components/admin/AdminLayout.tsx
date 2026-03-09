@@ -45,11 +45,11 @@ function AdminSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-3 px-3 py-2">
-          <div className="w-8 h-8 bg-navy rounded-lg flex items-center justify-center text-white font-bold">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold">
             SC
           </div>
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-semibold text-navy">SoummamCar</span>
+            <span className="text-sm font-semibold text-primary">SoummamCar</span>
             <span className="text-xs text-muted-foreground">Administration</span>
           </div>
         </div>
