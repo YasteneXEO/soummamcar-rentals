@@ -15,6 +15,13 @@ import reservationRoutes from './modules/reservations/routes.js';
 import paymentRoutes from './modules/payments/routes.js';
 import contractRoutes from './modules/contracts/routes.js';
 import conditionRoutes from './modules/conditions/routes.js';
+import partnerRoutes from './modules/partners/routes.js';
+import verificationRoutes from './modules/verification/routes.js';
+import reviewRoutes from './modules/reviews/routes.js';
+import payoutRoutes from './modules/payouts/routes.js';
+
+// Cron jobs
+import { initCronJobs } from './jobs/scheduler.js';
 
 const app = express();
 
@@ -40,6 +47,13 @@ app.use('/api/reservations', reservationRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/contracts', contractRoutes);
 app.use('/api/conditions', conditionRoutes);
+app.use('/api/partners', partnerRoutes);
+app.use('/api/verification', verificationRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/payouts', payoutRoutes);
+
+// ─── Initialize Cron Jobs ──────────────────────────────────────
+initCronJobs();
 
 // ─── 404 Handler ───────────────────────────────────────────────
 app.use((_req, res) => {

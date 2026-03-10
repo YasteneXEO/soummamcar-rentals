@@ -9,8 +9,8 @@ export const createConditionReportDto = z.object({
   kmReading: z.number().int().min(0),
   fuelLevel: z.enum(['QUARTER', 'HALF', 'THREE_QUARTER', 'FULL']),
   damageNotes: z.string().optional(),
-  gpsLatitude: z.number().optional(),
-  gpsLongitude: z.number().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   signature: z.string().optional(), // base64 or URL
 });
 export type CreateConditionReportDto = z.infer<typeof createConditionReportDto>;

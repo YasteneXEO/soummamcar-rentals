@@ -2,12 +2,21 @@ import prisma from '../../config/database.js';
 import type { CreateVehicleDto, UpdateVehicleDto, VehicleFiltersDto } from './dto.js';
 
 export class VehicleService {
+  /**
+   * Public listing — only shows published & verified vehicles.
+   * Admin listing uses listAll() below.
+   */
   async list(filters: VehicleFiltersDto) {
-    const where: Record<string, any> = {};
+    const where: Record<string, any> = {
+      isPublished: true,
+      verificationStatus: { in: ['APPROVED', 'PROBATION', 'FULLY_VERIFIED'] },
+    };
 
     if (filters.category) where.category = filters.category;
     if (filters.transmission) where.transmission = filters.transmission;
     if (filters.seats) where.seats = { gte: filters.seats };
+    if (filters.ownerType) where.ownerType = filters.ownerType;
+    if (filters.wilaya) where.wilaya = filters.wilaya;
     if (filters.available !== undefined) {
       where.status = filters.available ? 'AVAILABLE' : { not: 'AVAILABLE' };
     }
@@ -20,9 +29,14 @@ export class VehicleService {
     const [data, total] = await Promise.all([
       prisma.vehicle.findMany({
         where,
+        include: { pickupLocations: true },
         skip: (filters.page - 1) * filters.limit,
         take: filters.limit,
-        orderBy: { dailyRate: 'asc' },
+        orderBy: [
+          { isBoosted: 'desc' },
+          { boostPriority: 'desc' },
+          { dailyRate: 'asc' },
+        ],
       }),
       prisma.vehicle.count({ where }),
     ]);
@@ -36,24 +50,87 @@ export class VehicleService {
     };
   }
 
+  /** Admin: list all vehicles regardless of publication status */
+  async listAll(filters: VehicleFiltersDto) {
+    const where: Record<string, any> = {};
+    if (filters.category) where.category = filters.category;
+    if (filters.ownerType) where.ownerType = filters.ownerType;
+    if (filters.available !== undefined) {
+      where.status = filters.available ? 'AVAILABLE' : { not: 'AVAILABLE' };
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.vehicle.findMany({
+        where,
+        include: { partner: { select: { displayName: true, type: true } }, pickupLocations: true },
+        skip: (filters.page - 1) * filters.limit,
+        take: filters.limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.vehicle.count({ where }),
+    ]);
+
+    return { data, total, page: filters.page, limit: filters.limit, totalPages: Math.ceil(total / filters.limit) };
+  }
+
+  /** Partner: list only their own vehicles */
+  async listByPartner(partnerId: string, filters: VehicleFiltersDto) {
+    const where: Record<string, any> = { partnerId };
+    if (filters.category) where.category = filters.category;
+
+    const [data, total] = await Promise.all([
+      prisma.vehicle.findMany({
+        where,
+        include: { verificationSteps: true, pickupLocations: true },
+        skip: (filters.page - 1) * filters.limit,
+        take: filters.limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.vehicle.count({ where }),
+    ]);
+
+    return { data, total, page: filters.page, limit: filters.limit, totalPages: Math.ceil(total / filters.limit) };
+  }
+
   async getById(id: string) {
-    const vehicle = await prisma.vehicle.findUnique({ where: { id } });
+    const vehicle = await prisma.vehicle.findUnique({
+      where: { id },
+      include: {
+        partner: { select: { displayName: true, type: true, averageRating: true } },
+        pickupLocations: true,
+        availabilityRules: true,
+      },
+    });
     if (!vehicle) throw Object.assign(new Error('Vehicle not found'), { status: 404 });
     return vehicle;
   }
 
   async checkAvailability(vehicleId: string, from: Date, to: Date) {
+    // Check reservation conflicts
     const conflicts = await prisma.reservation.findMany({
       where: {
         vehicleId,
         status: { in: ['CONFIRMED', 'IN_PROGRESS'] },
-        OR: [
-          { pickupDate: { lte: to }, returnDate: { gte: from } },
-        ],
+        OR: [{ pickupDate: { lte: to }, returnDate: { gte: from } }],
       },
       select: { pickupDate: true, returnDate: true, referenceNumber: true },
     });
-    return { available: conflicts.length === 0, conflicts };
+
+    // Check availability rules (blocked periods)
+    const blocked = await prisma.availabilityRule.findMany({
+      where: {
+        vehicleId,
+        type: 'BLOCKED',
+        startDate: { lte: to },
+        endDate: { gte: from },
+      },
+    });
+
+    return {
+      available: conflicts.length === 0 && blocked.length === 0,
+      conflicts,
+      blockedPeriods: blocked,
+    };
   }
 
   async create(data: CreateVehicleDto) {
@@ -64,8 +141,11 @@ export class VehicleService {
     return prisma.vehicle.update({ where: { id }, data: data as any });
   }
 
+  async publish(id: string, publish: boolean) {
+    return prisma.vehicle.update({ where: { id }, data: { isPublished: publish } });
+  }
+
   async delete(id: string) {
-    // Check for active reservations
     const active = await prisma.reservation.count({
       where: { vehicleId: id, status: { in: ['CONFIRMED', 'IN_PROGRESS'] } },
     });

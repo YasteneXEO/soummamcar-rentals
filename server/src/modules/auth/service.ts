@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import prisma from '../../config/database.js';
 import { env } from '../../config/env.js';
-import type { RegisterDto, LoginDto, UpdateProfileDto } from './dto.js';
+import type { RegisterDto, LoginDto, UpdateProfileDto, UpdateClientProfileDto } from './dto.js';
 import logger from '../../utils/logger.js';
 
 interface TokenPair {
@@ -49,6 +49,9 @@ export class AuthService {
       },
     });
 
+    // Create empty client profile
+    await prisma.clientProfile.create({ data: { userId: user.id } });
+
     const tokens = generateTokens(user.id, user.email, user.role);
     await prisma.user.update({
       where: { id: user.id },
@@ -69,7 +72,7 @@ export class AuthService {
       throw Object.assign(new Error('Invalid credentials'), { status: 401 });
     }
 
-    if (user.status === 'BLACKLISTED') {
+    if (user.status === 'BANNED' || user.status === 'SUSPENDED') {
       throw Object.assign(new Error('Account suspended'), { status: 403 });
     }
 
@@ -165,7 +168,7 @@ export class AuthService {
   async getProfile(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: { documents: true },
+      include: { documents: true, clientProfile: true, partnerProfile: true },
     });
     if (!user) throw Object.assign(new Error('User not found'), { status: 404 });
     return this.sanitizeUser(user);
@@ -177,6 +180,15 @@ export class AuthService {
       data,
     });
     return this.sanitizeUser(user);
+  }
+
+  async updateClientProfile(userId: string, data: UpdateClientProfileDto) {
+    const profile = await prisma.clientProfile.upsert({
+      where: { userId },
+      create: { userId, ...data },
+      update: data,
+    });
+    return profile;
   }
 
   private sanitizeUser(user: any) {

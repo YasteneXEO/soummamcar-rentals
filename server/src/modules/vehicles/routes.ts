@@ -9,13 +9,17 @@ const ctrl = new VehicleController();
 
 // Public
 router.get('/', validate(vehicleFiltersDto, 'query'), ctrl.list);
-router.get('/alerts', authenticate, authorize('ADMIN', 'AGENT'), ctrl.getAlerts);
 router.get('/:id', ctrl.getById);
 router.get('/:id/availability', ctrl.checkAvailability);
 
-// Admin only
-router.post('/', authenticate, authorize('ADMIN'), validate(createVehicleDto), ctrl.create);
-router.put('/:id', authenticate, authorize('ADMIN'), validate(updateVehicleDto), ctrl.update);
-router.delete('/:id', authenticate, authorize('ADMIN'), ctrl.delete);
+// Admin / Agent
+router.get('/admin/all', authenticate, authorize('ADMIN', 'SUPER_ADMIN', 'AGENT'), validate(vehicleFiltersDto, 'query'), ctrl.listAll);
+router.get('/admin/alerts', authenticate, authorize('ADMIN', 'SUPER_ADMIN', 'AGENT'), ctrl.getAlerts);
+router.get('/partner/:partnerId', authenticate, authorize('ADMIN', 'SUPER_ADMIN', 'PARTNER'), validate(vehicleFiltersDto, 'query'), ctrl.listByPartner);
+
+router.post('/', authenticate, authorize('ADMIN', 'SUPER_ADMIN'), validate(createVehicleDto), ctrl.create);
+router.put('/:id', authenticate, authorize('ADMIN', 'SUPER_ADMIN'), validate(updateVehicleDto), ctrl.update);
+router.patch('/:id/publish', authenticate, authorize('ADMIN', 'SUPER_ADMIN'), ctrl.publish);
+router.delete('/:id', authenticate, authorize('ADMIN', 'SUPER_ADMIN'), ctrl.delete);
 
 export default router;

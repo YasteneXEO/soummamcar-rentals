@@ -1,13 +1,13 @@
 // ============================================================================
-// SoummamCar — Unified Type Definitions
+// SoummamCar Marketplace V3 — Unified Type Definitions
 // ============================================================================
-// Single source of truth for all domain types. Replaces the duplicate
-// Vehicle definitions from vehiclesData.ts and adminStore.ts.
+// Single source of truth for all domain types across the platform.
+// Mirrors the Prisma schema enums and models for frontend usage.
 // ============================================================================
 
 // ---------- Language & UI ----------
 
-export type Language = 'fr' | 'en' | 'ar';
+export type Language = 'fr' | 'en' | 'ar' | 'tz';
 
 export type BookingStep =
   | 'search'
@@ -20,9 +20,15 @@ export type BookingStep =
 
 // ---------- Enums (mirroring Prisma enums) ----------
 
-export type Role = 'ADMIN' | 'AGENT' | 'CLIENT';
+export type Role = 'SUPER_ADMIN' | 'ADMIN' | 'AGENT' | 'PARTNER' | 'CLIENT';
 
-export type ClientStatus = 'ACTIVE' | 'MONITOR' | 'BLACKLISTED';
+export type UserStatus = 'ACTIVE' | 'SUSPENDED' | 'BANNED';
+
+export type PartnerType = 'AGENCY' | 'INDIVIDUAL';
+
+export type PartnerStatus = 'PENDING_REVIEW' | 'ACTIVE' | 'SUSPENDED' | 'REJECTED';
+
+export type OwnerType = 'OWN_FLEET' | 'AGENCY' | 'INDIVIDUAL';
 
 export type VehicleStatus = 'AVAILABLE' | 'RENTED' | 'MAINTENANCE' | 'UNAVAILABLE';
 
@@ -34,18 +40,50 @@ export type Transmission = 'MANUAL' | 'AUTOMATIC';
 
 export type KmPolicy = 'UNLIMITED' | 'LIMITED';
 
-export type PickupLocation =
-  | 'AGENCY_CENTER'
-  | 'AIRPORT_SOUMMAM'
-  | 'HOME_DELIVERY'
-  | 'CUSTOM';
+export type CustodyMode = 'PERMANENT' | 'TEMPORARY';
+
+export type VerificationStatus =
+  | 'SUBMITTED'
+  | 'DOCS_REVIEW'
+  | 'PHOTOS_REVIEW'
+  | 'SCORED'
+  | 'INSPECTION_SCHEDULED'
+  | 'APPROVED'
+  | 'PROBATION'
+  | 'FULLY_VERIFIED'
+  | 'REJECTED'
+  | 'SUSPENDED';
+
+export type VerificationStepName =
+  | 'SUBMISSION'
+  | 'DOCUMENTS'
+  | 'PHOTOS'
+  | 'SCORING'
+  | 'INSPECTION'
+  | 'PROBATION';
+
+export type VerificationStepStatus =
+  | 'PENDING'
+  | 'IN_PROGRESS'
+  | 'PASSED'
+  | 'FAILED'
+  | 'SKIPPED';
+
+export type InspectionType = 'INITIAL' | 'REINSPECTION' | 'VIDEO';
+
+export type InspectionResult = 'APPROVED' | 'APPROVED_WITH_RESERVES' | 'REJECTED';
+
+export type PickupLocationType = 'AGENCY' | 'AIRPORT' | 'ADDRESS' | 'HOME_DELIVERY';
+
+export type AvailabilityType = 'AVAILABLE' | 'BLOCKED';
 
 export type ReservationStatus =
   | 'PENDING'
   | 'CONFIRMED'
   | 'IN_PROGRESS'
   | 'COMPLETED'
-  | 'CANCELLED';
+  | 'CANCELLED'
+  | 'DISPUTED';
 
 export type PaymentType = 'DEPOSIT' | 'BALANCE' | 'CAUTION';
 
@@ -65,6 +103,8 @@ export type PaymentStatus =
   | 'RETAINED'
   | 'DISPUTED';
 
+export type PayoutStatus = 'PENDING' | 'PROCESSING' | 'PAID' | 'FAILED';
+
 export type ContractStatus = 'DRAFT' | 'SIGNED' | 'COMPLETED';
 
 export type ReportType = 'PICKUP' | 'RETURN';
@@ -73,40 +113,144 @@ export type FuelLevel = 'QUARTER' | 'HALF' | 'THREE_QUARTER' | 'FULL';
 
 export type DocumentType = 'ID_CARD' | 'DRIVERS_LICENSE' | 'PASSPORT';
 
-export type Currency = 'DZD' | 'EUR' | 'CAD' | 'GBP';
+export type Currency = 'DZD' | 'EUR' | 'CAD' | 'GBP' | 'USD';
+
+export type PreferredLang = 'FR' | 'EN' | 'AR' | 'TZ';
+
+export type LoyaltyTier = 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM';
 
 // ---------- Domain Interfaces ----------
 
-/** Unified Vehicle definition — used for both the public catalogue and admin fleet management. */
+/** Universal user account */
+export interface User {
+  id: string;
+  email: string;
+  phone: string;
+  role: Role;
+  fullName: string;
+  avatar?: string;
+  wilaya?: string;
+  country?: string;
+  isDiaspora: boolean;
+  preferredLang: PreferredLang;
+  preferredCurrency: Currency;
+  emailVerified: boolean;
+  phoneVerified: boolean;
+  status: UserStatus;
+  createdAt: string;
+  updatedAt: string;
+  clientProfile?: ClientProfile;
+  partnerProfile?: Partner;
+}
+
+/** Client extension profile */
+export interface ClientProfile {
+  id: string;
+  userId: string;
+  idNumber?: string;
+  passportNumber?: string;
+  licenseNumber?: string;
+  licenseCountry?: string;
+  rating: number;
+  totalRentals: number;
+  loyaltyTier: LoyaltyTier;
+  loyaltyPoints: number;
+  internalNotes?: string;
+}
+
+/** Partner profile (agency or individual) */
+export interface Partner {
+  id: string;
+  userId: string;
+  type: PartnerType;
+  status: PartnerStatus;
+  displayName: string;
+  description?: string;
+  phone: string;
+  whatsapp?: string;
+  wilaya: string;
+  city: string;
+  address?: string;
+  logo?: string;
+  registreCommerce?: string;
+  nif?: string;
+  nis?: string;
+  businessLicenseUrl?: string;
+  idCardUrl?: string;
+  maxVehicles: number;
+  commissionRate: number;
+  bankName?: string;
+  bankRib?: string;
+  payoutFrequency?: string;
+  totalVehicles: number;
+  totalRentals: number;
+  averageRating: number;
+  totalRevenue: number;
+  isBoosted: boolean;
+  boostExpiresAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  vehicles?: Vehicle[];
+}
+
+/** Unified Vehicle — multi-source marketplace model */
 export interface Vehicle {
   id: string;
+  ownerType: OwnerType;
+  partnerId?: string;
   name: string;
-  plateNumber: string;
   brand: string;
   model: string;
   year: number;
-  status: VehicleStatus;
-  images: string[];          // URLs (first one used as thumbnail)
-  dailyRate: number;         // in DZD
-  cautionAmount: number;     // Variable per vehicle (15 000 – 50 000 DA)
-  currentKm: number;
-  nextServiceKm: number;
+  plateNumber: string;
+  vin?: string;
+  color?: string;
+  category: VehicleCategory;
   fuelType: FuelType;
   transmission: Transmission;
   seats: number;
   hasAC: boolean;
-  category: VehicleCategory;
+  features: string[];
+  dailyRate: number;
+  weeklyDiscount?: number;
+  monthlyDiscount?: number;
+  cautionAmount: number;
   kmPolicy: KmPolicy;
-  kmLimit?: number;          // if LIMITED, km/day
+  kmLimitPerDay?: number;
+  extraKmRate?: number;
+  verificationStatus: VerificationStatus;
+  verificationScore?: number;
+  probationRentalsCompleted: number;
+  lastInspectionDate?: string;
+  nextInspectionDue?: string;
+  status: VehicleStatus;
+  isPublished: boolean;
+  currentKm: number;
+  nextServiceKm: number;
+  images: string[];
+  registrationDocUrl?: string;
+  insuranceUrl?: string;
   insuranceExpiry: string;
-  ctExpiry: string;          // Contrôle technique
+  ctUrl?: string;
+  ctExpiry: string;
   vignetteExpiry: string;
-  registrationDoc?: string;
+  wilaya?: string;
+  city?: string;
+  custodyMode?: CustodyMode;
+  custodyStartDate?: string;
+  custodyEndDate?: string;
+  depositedAt?: string;
+  isBoosted: boolean;
+  boostExpiresAt?: string;
+  boostPriority: number;
   createdAt: string;
   updatedAt: string;
+  partner?: Partner;
+  pickupLocations?: PickupLocationData[];
+  verificationSteps?: VehicleVerificationStep[];
 }
 
-/** Lightweight vehicle for the public catalogue (derived from Vehicle). */
+/** Lightweight vehicle for the public catalogue — hides ownerType  */
 export type CatalogVehicle = Pick<
   Vehicle,
   | 'id'
@@ -122,60 +266,117 @@ export type CatalogVehicle = Pick<
   | 'brand'
   | 'model'
   | 'fuelType'
+  | 'features'
+  | 'year'
+  | 'color'
+  | 'kmPolicy'
+  | 'weeklyDiscount'
+  | 'monthlyDiscount'
+  | 'wilaya'
+  | 'verificationStatus'
+  | 'isBoosted'
 >;
 
-export interface Client {
+export interface VehicleVerificationStep {
   id: string;
-  fullName: string;
-  phone: string;
-  whatsapp?: string;
-  email: string;
-  wilaya?: string;
-  idNumber?: string;         // CNI or passport
-  licenseNumber?: string;
-  passportNumber?: string;
-  country?: string;          // Residence country (diaspora)
-  isDiaspora: boolean;
-  rating: 1 | 2 | 3 | 4 | 5;
-  status: ClientStatus;
-  totalRentals: number;
-  lastRental?: string;
-  internalNotes?: string;
+  vehicleId: string;
+  stepNumber: number;
+  stepName: VerificationStepName;
+  status: VerificationStepStatus;
+  performedById?: string;
+  notes?: string;
+  data?: Record<string, unknown>;
+  startedAt?: string;
+  completedAt?: string;
+}
+
+export interface VehicleInspection {
+  id: string;
+  vehicleId: string;
+  inspectorId: string;
+  type: InspectionType;
+  date: string;
+  location?: string;
+  checklistResults: InspectionChecklist;
+  totalScore: number;
+  photos: string[];
+  videoUrl?: string;
+  result: InspectionResult;
+  reserves: string[];
+  notes?: string;
   createdAt: string;
-  updatedAt: string;
+}
+
+export interface InspectionChecklist {
+  exterior: Record<string, boolean>;
+  interior: Record<string, boolean>;
+  mechanical: Record<string, boolean>;
+  documents: Record<string, boolean>;
+}
+
+export interface PickupLocationData {
+  id: string;
+  vehicleId: string;
+  type: PickupLocationType;
+  name: string;
+  address?: string;
+  wilaya?: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+  extraFee: number;
+}
+
+export interface AvailabilityRule {
+  id: string;
+  vehicleId: string;
+  type: AvailabilityType;
+  startDate: string;
+  endDate: string;
+  reason?: string;
 }
 
 export interface Reservation {
   id: string;
-  referenceNumber: string;   // SC-XXXXXX
-  userId: string;
+  referenceNumber: string;
+  clientId: string;
   vehicleId: string;
+  ownerType: OwnerType;
+  partnerId?: string;
   pickupDate: string;
   returnDate: string;
-  pickupTime: string;        // "09:00"
-  returnTime: string;        // "18:00"
-  pickupLocation: PickupLocation;
-  returnLocation: PickupLocation;
+  pickupTime: string;
+  returnTime: string;
+  pickupLocationId?: string;
+  returnLocationId?: string;
   status: ReservationStatus;
   isDiaspora: boolean;
   flightNumber?: string;
+  arrivalTime?: string;
   dailyRate: number;
   totalDays: number;
   subtotal: number;
-  depositAmount: number;     // 25% arrhes
-  cautionAmount: number;     // Variable per vehicle
-  extras?: BookingExtra[];
-  specialRequests?: string;
+  extrasTotal: number;
+  discountAmount: number;
+  depositAmount: number;
+  cautionAmount: number;
+  platformFee: number;
+  partnerPayout: number;
+  totalClient: number;
   currency: Currency;
   exchangeRate?: number;
+  extras?: BookingExtra[];
+  specialRequests?: string;
+  cancelledBy?: string;
+  cancellationReason?: string;
   createdAt: string;
   updatedAt: string;
-  // Populated relations (optional)
   vehicle?: Vehicle;
-  client?: Client;
+  client?: User;
   payments?: Payment[];
   contract?: Contract;
   conditionReports?: ConditionReport[];
+  review?: Review;
 }
 
 export interface Payment {
@@ -187,6 +388,7 @@ export interface Payment {
   method: PaymentMethod;
   status: PaymentStatus;
   transactionId?: string;
+  gatewayResponse?: Record<string, unknown>;
   paidAt?: string;
   refundedAt?: string;
   retainedAmount?: number;
@@ -194,6 +396,23 @@ export interface Payment {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Payout {
+  id: string;
+  partnerId: string;
+  amount: number;
+  currency: Currency;
+  status: PayoutStatus;
+  method?: string;
+  reference?: string;
+  periodStart: string;
+  periodEnd: string;
+  reservationIds: string[];
+  paidAt?: string;
+  notes?: string;
+  createdAt: string;
+  partner?: Partner;
 }
 
 export interface Contract {
@@ -210,12 +429,14 @@ export interface ConditionReport {
   id: string;
   reservationId: string;
   type: ReportType;
+  performedById?: string;
   photos: ConditionPhotos;
   kmReading: number;
   fuelLevel: FuelLevel;
   damageNotes?: string;
-  gpsLatitude?: number;
-  gpsLongitude?: number;
+  damagePhotos?: string[];
+  latitude?: number;
+  longitude?: number;
   signature?: string;
   createdAt: string;
 }
@@ -229,6 +450,23 @@ export interface ConditionPhotos {
   interior_rear?: string;
   dashboard?: string;
   trunk?: string;
+}
+
+export interface Review {
+  id: string;
+  reservationId: string;
+  authorId: string;
+  partnerId?: string;
+  vehicleRating: number;
+  serviceRating: number;
+  cleanlinessRating: number;
+  overallRating: number;
+  comment?: string;
+  response?: string;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+  author?: User;
 }
 
 export interface Document {
@@ -251,6 +489,17 @@ export interface MaintenanceRecord {
   createdAt: string;
 }
 
+export interface Notification {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  body: string;
+  link?: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
 export interface Setting {
   key: string;
   value: string;
@@ -261,8 +510,8 @@ export interface Setting {
 export interface BookingExtra {
   key: ExtraKey;
   label: string;
-  pricePerDay: number;  // DZD, 0 = flat fee
-  flatFee?: number;     // If set, charged once (not per day)
+  pricePerDay: number;
+  flatFee?: number;
   quantity: number;
 }
 
@@ -295,6 +544,57 @@ export interface AuthTokens {
 }
 
 export interface LoginResponse {
-  user: Client;
+  user: User;
   tokens: AuthTokens;
+}
+
+// ---------- Partner Portal Types ----------
+
+export interface PartnerStats {
+  totalVehicles: number;
+  activeVehicles: number;
+  totalRentals: number;
+  monthlyRevenue: number;
+  totalRevenue: number;
+  averageRating: number;
+  pendingPayouts: number;
+  vehiclesInVerification: number;
+}
+
+export interface PartnerVehicleSubmission {
+  brand: string;
+  model: string;
+  year: number;
+  color: string;
+  plateNumber: string;
+  vin: string;
+  currentKm: number;
+  fuelType: FuelType;
+  transmission: Transmission;
+  seats: number;
+  hasAC: boolean;
+  features: string[];
+  dailyRate: number;
+  cautionAmount: number;
+  kmPolicy: KmPolicy;
+  kmLimitPerDay?: number;
+  custodyMode: CustodyMode;
+  custodyStartDate?: string;
+  custodyEndDate?: string;
+  depositLocationId?: string;
+}
+
+export interface AdminDashboardStats {
+  totalReservations: number;
+  totalRevenue: number;
+  totalCommissions: number;
+  activeVehicles: number;
+  totalPartners: number;
+  vehiclesBySource: {
+    ownFleet: number;
+    agency: number;
+    individual: number;
+  };
+  verificationPipeline: Record<VerificationStatus, number>;
+  pendingPayouts: number;
 }

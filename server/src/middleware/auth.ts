@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
 import prisma from '../config/database.js';
 
-type Role = 'CLIENT' | 'ADMIN' | 'AGENT';
+type Role = 'CLIENT' | 'ADMIN' | 'AGENT' | 'SUPER_ADMIN' | 'PARTNER';
 
 // Extend Express Request
 declare global {
@@ -44,7 +44,7 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
       select: { id: true, email: true, role: true, fullName: true, status: true },
     });
 
-    if (!user || user.status === 'BLACKLISTED') {
+    if (!user || user.status === 'BANNED' || user.status === 'SUSPENDED') {
       res.status(401).json({ message: 'User not found or blocked' });
       return;
     }

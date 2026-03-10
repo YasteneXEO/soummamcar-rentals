@@ -40,7 +40,8 @@ export class ReservationController {
 
   async updateStatus(req: Request, res: Response, next: NextFunction) {
     try {
-      const reservation = await service.updateStatus(req.params.id as string, req.body.status);
+      const { status, cancelledBy, cancellationReason } = req.body;
+      const reservation = await service.updateStatus(req.params.id as string, status, cancelledBy, cancellationReason);
       res.json({ data: reservation });
     } catch (err: any) {
       if (err.status) { res.status(err.status).json({ message: err.message }); return; }

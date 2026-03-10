@@ -6,10 +6,11 @@ export const createReservationDto = z.object({
   returnDate: z.string().datetime(),
   pickupTime: z.string().regex(/^\d{2}:\d{2}$/),
   returnTime: z.string().regex(/^\d{2}:\d{2}$/),
-  pickupLocation: z.enum(['AGENCY_CENTER', 'AIRPORT_SOUMMAM', 'HOME_DELIVERY', 'CUSTOM']),
-  returnLocation: z.enum(['AGENCY_CENTER', 'AIRPORT_SOUMMAM', 'HOME_DELIVERY', 'CUSTOM']),
+  pickupLocationId: z.string().optional(),
+  returnLocationId: z.string().optional(),
   isDiaspora: z.boolean().default(false),
   flightNumber: z.string().optional(),
+  arrivalTime: z.string().optional(),
   extras: z.array(z.object({
     key: z.string(),
     label: z.string(),
@@ -29,16 +30,20 @@ export const createReservationDto = z.object({
 });
 
 export const reservationFiltersDto = z.object({
-  status: z.enum(['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']).optional(),
+  status: z.enum(['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'DISPUTED']).optional(),
   from: z.string().datetime().optional(),
   to: z.string().datetime().optional(),
-  userId: z.string().optional(),
+  clientId: z.string().optional(),
+  partnerId: z.string().optional(),
+  ownerType: z.enum(['OWN_FLEET', 'AGENCY', 'INDIVIDUAL']).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(20),
 });
 
 export const updateReservationStatusDto = z.object({
-  status: z.enum(['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']),
+  status: z.enum(['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'DISPUTED']),
+  cancelledBy: z.string().optional(),
+  cancellationReason: z.string().optional(),
 });
 
 export type CreateReservationDto = z.infer<typeof createReservationDto>;

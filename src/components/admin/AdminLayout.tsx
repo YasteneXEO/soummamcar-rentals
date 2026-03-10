@@ -7,7 +7,11 @@ import {
   FileText, 
   CreditCard, 
   Settings,
-  LogOut
+  LogOut,
+  ShieldCheck,
+  Building2,
+  DollarSign,
+  Star
 } from 'lucide-react';
 import { 
   Sidebar, 
@@ -34,6 +38,10 @@ const menuItems = [
   { title: 'Clients (CRM)', url: '/admin/clients', icon: Users },
   { title: 'Contrats & États', url: '/admin/contracts', icon: FileText },
   { title: 'Paiements & Cautions', url: '/admin/payments', icon: CreditCard },
+  { title: 'Vérification', url: '/admin/verification', icon: ShieldCheck },
+  { title: 'Partenaires', url: '/admin/partners', icon: Building2 },
+  { title: 'Virements', url: '/admin/payouts', icon: DollarSign },
+  { title: 'Avis', url: '/admin/reviews', icon: Star },
   { title: 'Paramètres', url: '/admin/settings', icon: Settings },
 ];
 

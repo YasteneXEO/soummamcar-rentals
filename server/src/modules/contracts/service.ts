@@ -11,7 +11,7 @@ export class ContractService {
   async create(data: CreateContractDto) {
     const reservation = await prisma.reservation.findUnique({
       where: { id: data.reservationId },
-      include: { vehicle: true, user: true },
+      include: { vehicle: true, client: true },
     });
     if (!reservation) throw Object.assign(new Error('Reservation not found'), { status: 404 });
 
@@ -66,7 +66,7 @@ export class ContractService {
       where: { id: contractId },
       include: {
         reservation: {
-          include: { vehicle: true, user: true },
+          include: { vehicle: true, client: true },
         },
       },
     });
@@ -79,7 +79,7 @@ export class ContractService {
       `CONTRAT DE LOCATION — ${contract.id}`,
       `==========================================`,
       ``,
-      `Client: ${res.user.fullName}`,
+      `Client: ${res.client.fullName}`,
       `Véhicule: ${res.vehicle.brand} ${res.vehicle.model}`,
       `Immatriculation: ${res.vehicle.plateNumber}`,
       ``,
@@ -100,13 +100,13 @@ export class ContractService {
   async list(filters: ContractFiltersDto) {
     const where: Record<string, any> = {};
     if (filters.status) where.status = filters.status;
-    if (filters.clientId) where.reservation = { userId: filters.clientId };
+    if (filters.clientId) where.reservation = { clientId: filters.clientId };
 
     const [contracts, total] = await Promise.all([
       prisma.contract.findMany({
         where,
         include: {
-          reservation: { include: { vehicle: true, user: true } },
+          reservation: { include: { vehicle: true, client: true } },
         },
         skip: (filters.page - 1) * filters.limit,
         take: filters.limit,
@@ -133,7 +133,7 @@ export class ContractService {
     const contract = await prisma.contract.findUnique({
       where: { id },
       include: {
-        reservation: { include: { vehicle: true, user: true } },
+        reservation: { include: { vehicle: true, client: true } },
       },
     });
     if (!contract) throw Object.assign(new Error('Contract not found'), { status: 404 });

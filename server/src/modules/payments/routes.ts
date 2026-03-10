@@ -16,9 +16,9 @@ router.post('/cib', authenticate, validate(initiateCibDto), controller.initiateC
 router.post('/stripe', authenticate, validate(initiateStripeDto), controller.initiateStripe.bind(controller));
 
 // Admin — manual confirmations and refunds
-router.post('/cash', authenticate, authorize('ADMIN', 'AGENT'), validate(confirmCashDto), controller.confirmCash.bind(controller));
-router.post('/transfer', authenticate, authorize('ADMIN', 'AGENT'), validate(confirmTransferDto), controller.confirmTransfer.bind(controller));
-router.post('/:id/refund', authenticate, authorize('ADMIN', 'AGENT'), validate(refundDto), controller.refund.bind(controller));
+router.post('/cash', authenticate, authorize('ADMIN', 'SUPER_ADMIN', 'AGENT'), validate(confirmCashDto), controller.confirmCash.bind(controller));
+router.post('/transfer', authenticate, authorize('ADMIN', 'SUPER_ADMIN', 'AGENT'), validate(confirmTransferDto), controller.confirmTransfer.bind(controller));
+router.post('/:id/refund', authenticate, authorize('ADMIN', 'SUPER_ADMIN', 'AGENT'), validate(refundDto), controller.refund.bind(controller));
 
 // List payments for a reservation
 router.get('/reservation/:reservationId', authenticate, controller.listByReservation.bind(controller));

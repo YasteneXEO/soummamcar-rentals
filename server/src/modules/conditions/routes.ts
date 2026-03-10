@@ -21,13 +21,13 @@ const upload = multer({
 // All routes require authentication + admin/agent role
 router.use(authenticate);
 
-router.get('/', authorize('ADMIN', 'AGENT'), validate(conditionFiltersDto, 'query'), controller.list.bind(controller));
-router.get('/compare/:reservationId', authorize('ADMIN', 'AGENT'), controller.compare.bind(controller));
+router.get('/', authorize('ADMIN', 'SUPER_ADMIN', 'AGENT'), validate(conditionFiltersDto, 'query'), controller.list.bind(controller));
+router.get('/compare/:reservationId', authorize('ADMIN', 'SUPER_ADMIN', 'AGENT'), controller.compare.bind(controller));
 router.get('/:id', controller.getById.bind(controller));
 
 router.post(
   '/',
-  authorize('ADMIN', 'AGENT'),
+  authorize('ADMIN', 'SUPER_ADMIN', 'AGENT'),
   upload.array('photos', 10),
   validate(createConditionReportDto),
   controller.create.bind(controller),
@@ -35,7 +35,7 @@ router.post(
 
 router.patch(
   '/:id',
-  authorize('ADMIN', 'AGENT'),
+  authorize('ADMIN', 'SUPER_ADMIN', 'AGENT'),
   upload.array('photos', 10),
   controller.update.bind(controller),
 );

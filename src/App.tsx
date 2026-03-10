@@ -13,8 +13,21 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import AccountPage from "./pages/AccountPage";
 import PaymentPage from "./pages/PaymentPage";
+import VehiclesPage from "./pages/VehiclesPage";
+import VehicleDetailPage from "./pages/VehicleDetailPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuthStore } from "./store/authStore";
+
+// Partner pages
+import PartnerLayout from "./pages/partner/PartnerLayout";
+import PartnerDashboard from "./pages/partner/PartnerDashboard";
+import PartnerVehiclesPage from "./pages/partner/PartnerVehiclesPage";
+import PartnerReservationsPage from "./pages/partner/PartnerReservationsPage";
+import PartnerVerificationPage from "./pages/partner/PartnerVerificationPage";
+import PartnerFinancesPage from "./pages/partner/PartnerFinancesPage";
+import PartnerReviewsPage from "./pages/partner/PartnerReviewsPage";
+import PartnerSettingsPage from "./pages/partner/PartnerSettingsPage";
+import PartnerRegisterPage from "./pages/partner/PartnerRegisterPage";
 
 // Admin pages
 import { LoginPage as AdminLoginPage } from "./components/admin/LoginPage";
@@ -26,6 +39,10 @@ import { ClientsPage } from "./components/admin/ClientsPage";
 import { ContractsPage } from "./components/admin/ContractsPage";
 import { PaymentsPage } from "./components/admin/PaymentsPage";
 import { SettingsPage } from "./components/admin/SettingsPage";
+import { VerificationPage } from "./components/admin/VerificationPage";
+import { PartnersPage } from "./components/admin/PartnersPage";
+import { PayoutsPage } from "./components/admin/PayoutsPage";
+import { ReviewsPage as AdminReviewsPage } from "./components/admin/ReviewsPage";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +59,10 @@ function AppRoutes() {
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/legal" element={<LegalPage />} />
+
+      {/* Catalog */}
+      <Route path="/vehicules" element={<VehiclesPage />} />
+      <Route path="/vehicules/:id" element={<VehicleDetailPage />} />
 
       {/* Client auth */}
       <Route path="/connexion" element={<LoginPage />} />
@@ -63,6 +84,35 @@ function AppRoutes() {
         }
       />
 
+      {/* Partner registration (any authenticated user) */}
+      <Route
+        path="/partner/register"
+        element={
+          <ProtectedRoute>
+            <PartnerRegisterPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Partner portal */}
+      <Route
+        path="/partner"
+        element={
+          <ProtectedRoute allowedRoles={['PARTNER']}>
+            <PartnerLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<PartnerDashboard />} />
+        <Route path="dashboard" element={<PartnerDashboard />} />
+        <Route path="vehicles" element={<PartnerVehiclesPage />} />
+        <Route path="reservations" element={<PartnerReservationsPage />} />
+        <Route path="verification" element={<PartnerVerificationPage />} />
+        <Route path="finances" element={<PartnerFinancesPage />} />
+        <Route path="reviews" element={<PartnerReviewsPage />} />
+        <Route path="settings" element={<PartnerSettingsPage />} />
+      </Route>
+
       {/* Admin */}
       <Route path="/admin/login" element={<AdminLoginPage />} />
       <Route path="/admin" element={<AdminLayout />}>
@@ -72,6 +122,10 @@ function AppRoutes() {
         <Route path="clients" element={<ClientsPage />} />
         <Route path="contracts" element={<ContractsPage />} />
         <Route path="payments" element={<PaymentsPage />} />
+        <Route path="verification" element={<VerificationPage />} />
+        <Route path="partners" element={<PartnersPage />} />
+        <Route path="payouts" element={<PayoutsPage />} />
+        <Route path="reviews" element={<AdminReviewsPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
 

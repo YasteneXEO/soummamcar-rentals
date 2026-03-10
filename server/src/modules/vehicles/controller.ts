@@ -11,6 +11,21 @@ export class VehicleController {
     } catch (err) { next(err); }
   }
 
+  async listAll(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await vehicleService.listAll(req.query as any);
+      res.json(result);
+    } catch (err) { next(err); }
+  }
+
+  async listByPartner(req: Request, res: Response, next: NextFunction) {
+    try {
+      const partnerId = req.params.partnerId as string;
+      const result = await vehicleService.listByPartner(partnerId, req.query as any);
+      res.json(result);
+    } catch (err) { next(err); }
+  }
+
   async getById(req: Request, res: Response, next: NextFunction) {
     try {
       const vehicle = await vehicleService.getById(req.params.id as string);
@@ -40,6 +55,13 @@ export class VehicleController {
   async update(req: Request, res: Response, next: NextFunction) {
     try {
       const vehicle = await vehicleService.update(req.params.id as string, req.body);
+      res.json({ data: vehicle });
+    } catch (err) { next(err); }
+  }
+
+  async publish(req: Request, res: Response, next: NextFunction) {
+    try {
+      const vehicle = await vehicleService.publish(req.params.id as string, req.body.isPublished);
       res.json({ data: vehicle });
     } catch (err) { next(err); }
   }

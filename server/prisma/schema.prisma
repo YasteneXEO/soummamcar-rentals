@@ -1,7 +1,9 @@
 // ============================================================================
-// SoummamCar — Prisma Schema
+// SoummamCar Marketplace V3 — Prisma Schema
 // ============================================================================
-// Complete data model for the SoummamCar rental platform.
+// Complete data model for the SoummamCar rental marketplace.
+// Supports 3 vehicle sources: OWN_FLEET, AGENCY, INDIVIDUAL
+// Includes 6-step vehicle verification pipeline.
 // Run `npx prisma migrate dev` after modifications.
 // ============================================================================
 
@@ -16,134 +18,360 @@ datasource db {
 
 // ======================= MODELS =======================
 
+/// Universal user account — all roles share this model
 model User {
-  id             String       @id @default(cuid())
-  email          String       @unique
-  phone          String       @unique
-  passwordHash   String
-  role           Role         @default(CLIENT)
-  fullName       String
-  wilaya         String?
-  idNumber       String?      // CNI or passport number
-  licenseNumber  String?      // Driving license
-  passportNumber String?      // For diaspora clients
-  country        String?      // Country of residence (diaspora)
-  isDiaspora     Boolean      @default(false)
-  rating         Int          @default(5) // 1-5
-  status         ClientStatus @default(ACTIVE)
-  internalNotes  String?
+  id               String         @id @default(cuid())
+  email            String         @unique
+  phone            String         @unique
+  passwordHash     String
+  role             Role           @default(CLIENT)
+  fullName         String
+  avatar           String?
+  wilaya           String?
+  country          String?
+  isDiaspora       Boolean        @default(false)
+  preferredLang    PreferredLang  @default(FR)
+  preferredCurrency String        @default("DZD")
+  emailVerified    Boolean        @default(false)
+  phoneVerified    Boolean        @default(false)
+  status           UserStatus     @default(ACTIVE)
 
-  // Refresh token tracking (for JWT rotation)
-  refreshToken   String?
-  resetToken     String?
-  resetTokenExp  DateTime?
+  // JWT rotation
+  refreshToken  String?
+  resetToken    String?
+  resetTokenExp DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  reservations Reservation[]
-  documents    Document[]
-  activityLogs ActivityLog[]
+  // Relations
+  clientProfile  ClientProfile?
+  partnerProfile Partner?
+  reservations   Reservation[]
+  reviews        Review[]
+  documents      Document[]
+  notifications  Notification[]
+  activityLogs   ActivityLog[]
+  inspections    VehicleInspection[] @relation("Inspector")
+  verificationStepsPerformed VehicleVerificationStep[] @relation("Performer")
+  conditionReports ConditionReport[] @relation("Reporter")
 
   @@index([email])
   @@index([phone])
   @@index([role])
+  @@index([status])
 }
 
+/// Client extension — loyalty, IDs, internal notes
+model ClientProfile {
+  id             String     @id @default(cuid())
+  userId         String     @unique
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  idNumber       String?    // CNI
+  passportNumber String?
+  licenseNumber  String?
+  licenseCountry String?
+  rating         Float      @default(5)
+  totalRentals   Int        @default(0)
+  loyaltyTier    LoyaltyTier @default(BRONZE)
+  loyaltyPoints  Int        @default(0)
+  internalNotes  String?
+
+  @@index([userId])
+}
+
+/// Partner profile — agency or individual vehicle supplier
+model Partner {
+  id              String        @id @default(cuid())
+  userId          String        @unique
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type            PartnerType
+  status          PartnerStatus @default(PENDING_REVIEW)
+  displayName     String
+  description     String?
+  phone           String
+  whatsapp        String?
+  wilaya          String
+  city            String
+  address         String?
+  logo            String?
+  // Agency-specific
+  registreCommerce  String?
+  nif               String?
+  nis               String?
+  businessLicenseUrl String?
+  // Individual-specific
+  idCardUrl       String?
+  maxVehicles     Int           @default(3)
+  // Finance
+  commissionRate  Float         @default(0.20) // 0.15 for agency, 0.20 for individual
+  bankName        String?
+  bankRib         String?
+  payoutFrequency String?       @default("WEEKLY")
+  // Stats (denormalized for performance)
+  totalVehicles   Int           @default(0)
+  totalRentals    Int           @default(0)
+  averageRating   Float         @default(0)
+  totalRevenue    Float         @default(0)
+  // Boost
+  isBoosted       Boolean       @default(false)
+  boostExpiresAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  vehicles       Vehicle[]
+  payouts        Payout[]
+  reviewsReceived Review[]
+  reservations   Reservation[]
+
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+}
+
+/// Vehicle — multi-source (own fleet, agency, individual)
 model Vehicle {
   id              String          @id @default(cuid())
+  ownerType       OwnerType       @default(OWN_FLEET)
+  partnerId       String?
+  partner         Partner?        @relation(fields: [partnerId], references: [id])
   name            String
-  plateNumber     String          @unique
   brand           String
   model           String
   year            Int
-  status          VehicleStatus   @default(AVAILABLE)
-  images          String[]        // URLs
-  dailyRate       Int             // in DZD
-  cautionAmount   Int             // Variable per vehicle (15 000 – 50 000 DA)
-  currentKm       Int
-  nextServiceKm   Int
+  plateNumber     String          @unique
+  vin             String?
+  color           String?
+  // Characteristics
+  category        VehicleCategory
   fuelType        FuelType
   transmission    Transmission
   seats           Int
   hasAC           Boolean         @default(true)
-  category        VehicleCategory
+  features        String[]        @default([])
+  // Pricing
+  dailyRate       Int             // DZD
+  weeklyDiscount  Float?          // % discount for 7+ days
+  monthlyDiscount Float?          // % discount for 30+ days
+  cautionAmount   Int             // Variable per vehicle
   kmPolicy        KmPolicy        @default(UNLIMITED)
-  kmLimit         Int?            // if LIMITED, km/day
+  kmLimitPerDay   Int?
+  extraKmRate     Int?            // DZD per extra km
+  // Verification pipeline
+  verificationStatus VerificationStatus @default(SUBMITTED)
+  verificationScore  Int?         // 0-100
+  verificationNotes  String?
+  inspectionReport   Json?        // summary JSON
+  probationRentalsCompleted Int   @default(0) // 0-3
+  lastInspectionDate DateTime?
+  nextInspectionDue  DateTime?
+  // State
+  status          VehicleStatus   @default(AVAILABLE)
+  isPublished     Boolean         @default(false)
+  currentKm       Int
+  nextServiceKm   Int
+  // Documents & images
+  images          String[]
+  registrationDocUrl String?
+  insuranceUrl    String?
   insuranceExpiry DateTime
-  ctExpiry        DateTime        // Contrôle technique
+  ctUrl           String?
+  ctExpiry        DateTime
   vignetteExpiry  DateTime
-  registrationDoc String?
+  // Location
+  wilaya          String?
+  city            String?
+  // Custody (for partner vehicles)
+  custodyMode     CustodyMode?
+  custodyStartDate DateTime?
+  custodyEndDate  DateTime?
+  depositedAt     DateTime?
+  currentLocationId String?
+  // Boost
+  isBoosted       Boolean         @default(false)
+  boostExpiresAt  DateTime?
+  boostPriority   Int             @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Relations
+  pickupLocations    PickupLocation[]
+  availabilityRules  AvailabilityRule[]
   reservations       Reservation[]
   maintenanceRecords MaintenanceRecord[]
+  verificationSteps  VehicleVerificationStep[]
+  inspections        VehicleInspection[]
 
   @@index([status])
   @@index([category])
+  @@index([ownerType])
+  @@index([partnerId])
+  @@index([verificationStatus])
+  @@index([isPublished])
 }
 
+/// Track each step of the 6-step verification pipeline
+model VehicleVerificationStep {
+  id           String                @id @default(cuid())
+  vehicleId    String
+  vehicle      Vehicle               @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  stepNumber   Int                   // 1-6
+  stepName     VerificationStepName
+  status       VerificationStepStatus @default(PENDING)
+  performedById String?
+  performedBy  User?                 @relation("Performer", fields: [performedById], references: [id])
+  notes        String?
+  data         Json?                 // Score details, checklist, etc.
+  startedAt    DateTime?
+  completedAt  DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([vehicleId])
+  @@index([stepName])
+  @@index([status])
+}
+
+/// Detailed inspection report (step 5)
+model VehicleInspection {
+  id              String           @id @default(cuid())
+  vehicleId       String
+  vehicle         Vehicle          @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  inspectorId     String
+  inspector       User             @relation("Inspector", fields: [inspectorId], references: [id])
+  type            InspectionType
+  date            DateTime
+  location        String?
+  checklistResults Json             // 28-point checklist
+  totalScore      Int              // out of 28
+  photos          String[]
+  videoUrl        String?
+  result          InspectionResult
+  reserves        String[]         @default([])
+  notes           String?
+
+  createdAt DateTime @default(now())
+
+  @@index([vehicleId])
+  @@index([inspectorId])
+}
+
+/// Pickup/return locations for a vehicle
+model PickupLocation {
+  id          String           @id @default(cuid())
+  vehicleId   String
+  vehicle     Vehicle          @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  type        PickupLocationType
+  name        String
+  address     String?
+  wilaya      String?
+  city        String?
+  latitude    Float?
+  longitude   Float?
+  extraFee    Int              @default(0)
+
+  @@index([vehicleId])
+}
+
+/// Availability/blackout rules for a vehicle
+model AvailabilityRule {
+  id         String          @id @default(cuid())
+  vehicleId  String
+  vehicle    Vehicle         @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  type       AvailabilityType
+  startDate  DateTime
+  endDate    DateTime
+  reason     String?
+
+  @@index([vehicleId])
+  @@index([startDate, endDate])
+}
+
+/// Reservation — marketplace-aware with commission tracking
 model Reservation {
   id              String            @id @default(cuid())
   referenceNumber String            @unique // SC-XXXXXX
-  userId          String
-  user            User              @relation(fields: [userId], references: [id])
+  clientId        String
+  client          User              @relation(fields: [clientId], references: [id])
   vehicleId       String
   vehicle         Vehicle           @relation(fields: [vehicleId], references: [id])
+  ownerType       OwnerType         @default(OWN_FLEET)
+  partnerId       String?
+  partner         Partner?          @relation(fields: [partnerId], references: [id])
 
+  // Dates
   pickupDate      DateTime
   returnDate      DateTime
   pickupTime      String            // "09:00"
   returnTime      String            // "18:00"
-  pickupLocation  PickupLocation
-  returnLocation  PickupLocation
+  pickupLocationId String?
+  returnLocationId String?
 
   status          ReservationStatus @default(PENDING)
-  isDiaspora      Boolean           @default(false)
-  flightNumber    String?           // For airport pickup coordination
 
+  // Diaspora
+  isDiaspora      Boolean           @default(false)
+  flightNumber    String?
+  arrivalTime     String?
+
+  // Pricing (calculated server-side)
   dailyRate       Int
   totalDays       Int
   subtotal        Int
-  depositAmount   Int               // 25% arrhes
-  cautionAmount   Int               // Variable per vehicle
-  extras          Json?             // BookingExtra[]
+  extrasTotal     Int               @default(0)
+  discountAmount  Int               @default(0)
+  depositAmount   Int               // 25%
+  cautionAmount   Int
+  platformFee     Int               @default(0) // Commission taken by SoummamCar
+  partnerPayout   Int               @default(0) // Amount due to partner
+  totalClient     Int               // Total the client pays
+  extras          Json?
   specialRequests String?
 
-  currency        String            @default("DZD") // DZD, EUR, CAD, GBP
-  exchangeRate    Float?            // Rate at reservation time
+  // Currency
+  currency        String            @default("DZD")
+  exchangeRate    Float?
+
+  // Cancellation
+  cancelledBy     String?
+  cancellationReason String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Relations
   payments         Payment[]
   contract         Contract?
   conditionReports ConditionReport[]
+  review           Review?
 
-  @@index([userId])
+  @@index([clientId])
   @@index([vehicleId])
+  @@index([partnerId])
   @@index([status])
   @@index([referenceNumber])
   @@index([pickupDate])
 }
 
 model Payment {
-  id            String        @id @default(cuid())
-  reservationId String
-  reservation   Reservation   @relation(fields: [reservationId], references: [id])
-  type          PaymentType   // DEPOSIT, BALANCE, CAUTION
-  amount        Int
-  currency      String        @default("DZD")
-  method        PaymentMethod
-  status        PaymentStatus @default(PENDING)
-  transactionId String?       // SATIM or Stripe transaction ID
-  paidAt        DateTime?
-  refundedAt    DateTime?
-  retainedAmount Int?
-  retainedReason String?
-  notes          String?
+  id              String        @id @default(cuid())
+  reservationId   String
+  reservation     Reservation   @relation(fields: [reservationId], references: [id])
+  type            PaymentType
+  amount          Int
+  currency        String        @default("DZD")
+  method          PaymentMethod
+  status          PaymentStatus @default(PENDING)
+  transactionId   String?
+  gatewayResponse Json?
+  paidAt          DateTime?
+  refundedAt      DateTime?
+  retainedAmount  Int?
+  retainedReason  String?
+  notes           String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -152,13 +380,36 @@ model Payment {
   @@index([status])
 }
 
+/// Partner payouts
+model Payout {
+  id             String       @id @default(cuid())
+  partnerId      String
+  partner        Partner      @relation(fields: [partnerId], references: [id])
+  amount         Int
+  currency       String       @default("DZD")
+  status         PayoutStatus @default(PENDING)
+  method         String?
+  reference      String?
+  periodStart    DateTime
+  periodEnd      DateTime
+  reservationIds String[]
+  paidAt         DateTime?
+  notes          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([partnerId])
+  @@index([status])
+}
+
 model Contract {
   id            String         @id @default(cuid())
   reservationId String         @unique
   reservation   Reservation    @relation(fields: [reservationId], references: [id])
-  pdfUrl        String?        // URL of the generated PDF
+  pdfUrl        String?
   status        ContractStatus @default(DRAFT)
-  signatureUrl  String?        // Signature image URL
+  signatureUrl  String?
   signedAt      DateTime?
 
   createdAt DateTime @default(now())
@@ -170,13 +421,16 @@ model ConditionReport {
   id            String      @id @default(cuid())
   reservationId String
   reservation   Reservation @relation(fields: [reservationId], references: [id])
-  type          ReportType  // PICKUP or RETURN
-  photos        Json        // { front_left: url, front_right: url, ... }
+  type          ReportType
+  performedById String?
+  performedBy   User?       @relation("Reporter", fields: [performedById], references: [id])
+  photos        Json
   kmReading     Int
   fuelLevel     FuelLevel
   damageNotes   String?
-  gpsLatitude   Float?
-  gpsLongitude  Float?
+  damagePhotos  String[]    @default([])
+  latitude      Float?
+  longitude     Float?
   signature     String?
 
   createdAt DateTime @default(now())
@@ -184,11 +438,36 @@ model ConditionReport {
   @@index([reservationId])
 }
 
+/// Post-rental review
+model Review {
+  id              String      @id @default(cuid())
+  reservationId   String      @unique
+  reservation     Reservation @relation(fields: [reservationId], references: [id])
+  authorId        String
+  author          User        @relation(fields: [authorId], references: [id])
+  partnerId       String?
+  partner         Partner?    @relation(fields: [partnerId], references: [id])
+  vehicleRating   Int         // 1-5
+  serviceRating   Int         // 1-5
+  cleanlinessRating Int       // 1-5
+  overallRating   Float       // calculated average
+  comment         String?
+  response        String?     // partner response
+  isPublished     Boolean     @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([authorId])
+  @@index([partnerId])
+  @@index([reservationId])
+}
+
 model Document {
   id       String       @id @default(cuid())
   userId   String
-  user     User         @relation(fields: [userId], references: [id])
-  type     DocumentType // ID_CARD, DRIVERS_LICENSE, PASSPORT
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type     DocumentType
   fileUrl  String
   verified Boolean      @default(false)
 
@@ -200,7 +479,7 @@ model Document {
 model MaintenanceRecord {
   id        String  @id @default(cuid())
   vehicleId String
-  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   date      DateTime
   km        Int
   type      String
@@ -212,9 +491,35 @@ model MaintenanceRecord {
   @@index([vehicleId])
 }
 
+model Notification {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type     String   // e.g. "RESERVATION_CREATED", "VERIFICATION_UPDATE"
+  title    String
+  body     String
+  link     String?
+  isRead   Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+}
+
 model Setting {
   key   String @id
   value String
+}
+
+model ExchangeRate {
+  id           String   @id @default(cuid())
+  fromCurrency String
+  toCurrency   String
+  rate         Float
+  fetchedAt    DateTime @default(now())
+
+  @@unique([fromCurrency, toCurrency])
 }
 
 /// Admin/Agent activity audit log
@@ -222,10 +527,10 @@ model ActivityLog {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  action    String   // e.g. "CREATE_VEHICLE", "CONFIRM_PAYMENT"
-  entity    String   // e.g. "Vehicle", "Reservation"
+  action    String
+  entity    String
   entityId  String?
-  metadata  Json?    // Additional context
+  metadata  Json?
   createdAt DateTime @default(now())
 
   @@index([userId])
@@ -235,15 +540,49 @@ model ActivityLog {
 // ======================= ENUMS =======================
 
 enum Role {
+  SUPER_ADMIN
   ADMIN
   AGENT
+  PARTNER
   CLIENT
 }
 
-enum ClientStatus {
+enum UserStatus {
   ACTIVE
-  MONITOR
-  BLACKLISTED
+  SUSPENDED
+  BANNED
+}
+
+enum PreferredLang {
+  FR
+  EN
+  AR
+  TZ
+}
+
+enum LoyaltyTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+enum PartnerType {
+  AGENCY
+  INDIVIDUAL
+}
+
+enum PartnerStatus {
+  PENDING_REVIEW
+  ACTIVE
+  SUSPENDED
+  REJECTED
+}
+
+enum OwnerType {
+  OWN_FLEET
+  AGENCY
+  INDIVIDUAL
 }
 
 enum VehicleStatus {
@@ -277,11 +616,63 @@ enum KmPolicy {
   LIMITED
 }
 
-enum PickupLocation {
-  AGENCY_CENTER
-  AIRPORT_SOUMMAM
+enum CustodyMode {
+  PERMANENT
+  TEMPORARY
+}
+
+enum VerificationStatus {
+  SUBMITTED
+  DOCS_REVIEW
+  PHOTOS_REVIEW
+  SCORED
+  INSPECTION_SCHEDULED
+  APPROVED
+  PROBATION
+  FULLY_VERIFIED
+  REJECTED
+  SUSPENDED
+}
+
+enum VerificationStepName {
+  SUBMISSION
+  DOCUMENTS
+  PHOTOS
+  SCORING
+  INSPECTION
+  PROBATION
+}
+
+enum VerificationStepStatus {
+  PENDING
+  IN_PROGRESS
+  PASSED
+  FAILED
+  SKIPPED
+}
+
+enum InspectionType {
+  INITIAL
+  REINSPECTION
+  VIDEO
+}
+
+enum InspectionResult {
+  APPROVED
+  APPROVED_WITH_RESERVES
+  REJECTED
+}
+
+enum PickupLocationType {
+  AGENCY
+  AIRPORT
+  ADDRESS
   HOME_DELIVERY
-  CUSTOM
+}
+
+enum AvailabilityType {
+  AVAILABLE
+  BLOCKED
 }
 
 enum ReservationStatus {
@@ -290,6 +681,7 @@ enum ReservationStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+  DISPUTED
 }
 
 enum PaymentType {
@@ -314,6 +706,13 @@ enum PaymentStatus {
   PARTIALLY_RETAINED
   RETAINED
   DISPUTED
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
 }
 
 enum ContractStatus {

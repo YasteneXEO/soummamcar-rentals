@@ -267,3 +267,146 @@ export const conditionsApi = {
   compare: (contractId: string) =>
     request<any>(`/conditions/compare/${contractId}`),
 };
+
+// ─── Partners API ──────────────────────────────────────────────
+export const partnersApi = {
+  register: (data: any) =>
+    request<any>('/partners/register', { method: 'POST', body: JSON.stringify(data) }),
+
+  getMyProfile: () =>
+    request<any>('/partners/me'),
+
+  updateMyProfile: (data: any) =>
+    request<any>('/partners/me', { method: 'PUT', body: JSON.stringify(data) }),
+
+  getDashboard: () =>
+    request<any>('/partners/me/dashboard'),
+
+  getMyVehicles: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return request<any>(`/partners/me/vehicles${qs}`);
+  },
+
+  submitVehicle: (data: any) =>
+    request<any>('/partners/me/vehicles', { method: 'POST', body: JSON.stringify(data) }),
+
+  getMyReservations: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return request<any>(`/partners/me/reservations${qs}`);
+  },
+
+  getMyPayouts: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return request<any>(`/partners/me/payouts${qs}`);
+  },
+
+  // Admin endpoints
+  list: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return request<any>(`/partners${qs}`);
+  },
+
+  getById: (id: string) =>
+    request<any>(`/partners/${id}`),
+
+  adminUpdate: (id: string, data: any) =>
+    request<any>(`/partners/${id}/admin`, { method: 'PUT', body: JSON.stringify(data) }),
+};
+
+// ─── Verification API ──────────────────────────────────────────
+export const verificationApi = {
+  getQueue: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return request<any>(`/verification/queue${qs}`);
+  },
+
+  getReinspectionDue: () =>
+    request<any>('/verification/reinspection-due'),
+
+  getVehicleSteps: (vehicleId: string) =>
+    request<any>(`/verification/vehicles/${vehicleId}/steps`),
+
+  advanceStep: (vehicleId: string, data: any) =>
+    request<any>(`/verification/vehicles/${vehicleId}/steps`, { method: 'POST', body: JSON.stringify(data) }),
+
+  scoreVehicle: (vehicleId: string, data: any) =>
+    request<any>(`/verification/vehicles/${vehicleId}/score`, { method: 'POST', body: JSON.stringify(data) }),
+
+  overrideVerification: (vehicleId: string, data: any) =>
+    request<any>(`/verification/vehicles/${vehicleId}/override`, { method: 'POST', body: JSON.stringify(data) }),
+
+  recordInspection: (vehicleId: string, data: any) =>
+    request<any>(`/verification/inspections/${vehicleId}`, { method: 'POST', body: JSON.stringify(data) }),
+};
+
+// ─── Reviews API ───────────────────────────────────────────────
+export const reviewsApi = {
+  list: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return request<any>(`/reviews${qs}`);
+  },
+
+  create: (data: any) =>
+    request<any>('/reviews', { method: 'POST', body: JSON.stringify(data) }),
+
+  respond: (id: string, data: { response: string }) =>
+    request<any>(`/reviews/${id}/respond`, { method: 'POST', body: JSON.stringify(data) }),
+
+  moderate: (id: string, data: { isPublished: boolean }) =>
+    request<any>(`/reviews/${id}/moderate`, { method: 'PATCH', body: JSON.stringify(data) }),
+};
+
+// ─── Payouts API ───────────────────────────────────────────────
+export const payoutsApi = {
+  list: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return request<any>(`/payouts${qs}`);
+  },
+
+  generate: () =>
+    request<any>('/payouts/generate', { method: 'POST' }),
+
+  process: (id: string, data: any) =>
+    request<any>(`/payouts/${id}/process`, { method: 'PATCH', body: JSON.stringify(data) }),
+
+  markPaid: (id: string, data: any) =>
+    request<any>(`/payouts/${id}/paid`, { method: 'PATCH', body: JSON.stringify(data) }),
+
+  markFailed: (id: string, data: any) =>
+    request<any>(`/payouts/${id}/failed`, { method: 'PATCH', body: JSON.stringify(data) }),
+
+  createManual: (data: any) =>
+    request<any>('/payouts/manual', { method: 'POST', body: JSON.stringify(data) }),
+
+  partnerSummary: (partnerId: string) =>
+    request<any>(`/payouts/partner/${partnerId}/summary`),
+};
+
+// ─── Notifications API ─────────────────────────────────────────
+export const notificationsApi = {
+  list: () =>
+    request<any>('/notifications'),
+
+  markRead: (id: string) =>
+    request<void>(`/notifications/${id}/read`, { method: 'PATCH' }),
+
+  markAllRead: () =>
+    request<void>('/notifications/read-all', { method: 'PATCH' }),
+};
+
+// ─── Admin API (aggregated dashboard) ──────────────────────────
+export const adminApi = {
+  getDashboard: () =>
+    request<any>('/admin/dashboard'),
+
+  getActivityLogs: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return request<any>(`/admin/activity-logs${qs}`);
+  },
+
+  getSettings: () =>
+    request<any>('/settings'),
+
+  updateSetting: (key: string, value: string) =>
+    request<any>(`/settings/${key}`, { method: 'PUT', body: JSON.stringify({ value }) }),
+};

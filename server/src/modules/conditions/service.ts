@@ -35,8 +35,8 @@ export class ConditionService {
         fuelLevel: data.fuelLevel,
         damageNotes: data.damageNotes ?? null,
         photos: photoUrls, // stored as Json
-        gpsLatitude: data.gpsLatitude ?? null,
-        gpsLongitude: data.gpsLongitude ?? null,
+        latitude: data.latitude ?? null,
+        longitude: data.longitude ?? null,
         signature: data.signature ?? null,
       },
     });
@@ -56,8 +56,8 @@ export class ConditionService {
     if (data.kmReading !== undefined) updateData.kmReading = data.kmReading;
     if (data.fuelLevel !== undefined) updateData.fuelLevel = data.fuelLevel;
     if (data.damageNotes !== undefined) updateData.damageNotes = data.damageNotes;
-    if (data.gpsLatitude !== undefined) updateData.gpsLatitude = data.gpsLatitude;
-    if (data.gpsLongitude !== undefined) updateData.gpsLongitude = data.gpsLongitude;
+    if (data.latitude !== undefined) updateData.latitude = data.latitude;
+    if (data.longitude !== undefined) updateData.longitude = data.longitude;
     if (data.signature !== undefined) updateData.signature = data.signature;
     if (newPhotoUrls) {
       const existingPhotos = (report.photos as string[]) || [];

@@ -10,6 +10,7 @@ import {
   forgotPasswordDto,
   resetPasswordDto,
   updateProfileDto,
+  updateClientProfileDto,
 } from './dto.js';
 
 const router = Router();
@@ -25,6 +26,7 @@ router.post('/reset-password', validate(resetPasswordDto), ctrl.resetPassword);
 // Protected routes
 router.get('/me', authenticate, ctrl.getMe);
 router.put('/me', authenticate, validate(updateProfileDto), ctrl.updateMe);
+router.put('/me/client-profile', authenticate, validate(updateClientProfileDto), ctrl.updateClientProfile);
 router.post('/logout', authenticate, ctrl.logout);
 
 // TODO: POST /me/documents — file upload via multer
