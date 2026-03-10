@@ -2,57 +2,70 @@ import daciaLogan from "@/assets/dacia-logan.jpg";
 import renaultSymbol from "@/assets/renault-symbol.jpg";
 import hyundaiI10 from "@/assets/hyundai-i10.jpg";
 import kiaPicanto from "@/assets/kia-picanto.jpg";
+import type { CatalogVehicle } from "@/types";
 
-export interface Vehicle {
-  id: string;
-  name: string;
-  image: string;
-  seats: number;
-  transmission: "manual" | "automatic";
-  hasAC: boolean;
-  pricePerDay: number;
-  available: boolean;
-}
+// Re-export for backward compatibility
+export type { CatalogVehicle as Vehicle } from "@/types";
 
-export const vehicles: Vehicle[] = [
+export const vehicles: CatalogVehicle[] = [
   {
     id: "dacia-logan",
     name: "Dacia Logan",
-    image: daciaLogan,
+    images: [daciaLogan],
     seats: 5,
-    transmission: "manual",
+    transmission: "MANUAL",
     hasAC: true,
-    pricePerDay: 4500,
-    available: true,
+    dailyRate: 4500,
+    status: "AVAILABLE",
+    category: "ECONOMY",
+    cautionAmount: 15000,
+    brand: "Dacia",
+    model: "Logan",
+    fuelType: "ESSENCE",
   },
   {
     id: "renault-symbol",
     name: "Renault Symbol",
-    image: renaultSymbol,
+    images: [renaultSymbol],
     seats: 5,
-    transmission: "manual",
+    transmission: "MANUAL",
     hasAC: true,
-    pricePerDay: 4000,
-    available: true,
+    dailyRate: 4000,
+    status: "AVAILABLE",
+    category: "ECONOMY",
+    cautionAmount: 15000,
+    brand: "Renault",
+    model: "Symbol",
+    fuelType: "ESSENCE",
   },
   {
     id: "hyundai-i10",
     name: "Hyundai i10",
-    image: hyundaiI10,
+    images: [hyundaiI10],
     seats: 4,
-    transmission: "manual",
+    transmission: "MANUAL",
     hasAC: true,
-    pricePerDay: 3500,
-    available: false,
+    dailyRate: 3500,
+    status: "RENTED",
+    category: "ECONOMY",
+    cautionAmount: 15000,
+    brand: "Hyundai",
+    model: "i10",
+    fuelType: "ESSENCE",
   },
   {
     id: "kia-picanto",
     name: "Kia Picanto",
-    image: kiaPicanto,
+    images: [kiaPicanto],
     seats: 4,
-    transmission: "automatic",
+    transmission: "AUTOMATIC",
     hasAC: true,
-    pricePerDay: 3500,
-    available: true,
+    dailyRate: 3500,
+    status: "AVAILABLE",
+    category: "COMPACT",
+    cautionAmount: 20000,
+    brand: "Kia",
+    model: "Picanto",
+    fuelType: "ESSENCE",
   },
 ];

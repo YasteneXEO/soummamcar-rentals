@@ -497,7 +497,14 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
   // Auth
   isAuthenticated: false,
   login: (email: string, password: string) => {
-    if (email === 'admin@soummamcar.dz' && password === 'demo1234') {
+    // TODO: Replace with API call to POST /api/auth/login
+    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'admin@soummamcar.dz';
+    const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || '';
+    if (!adminPassword) {
+      console.warn('VITE_ADMIN_PASSWORD not set — admin login disabled until backend is ready');
+      return false;
+    }
+    if (email === adminEmail && password === adminPassword) {
       set({ isAuthenticated: true });
       return true;
     }

@@ -1,0 +1,341 @@
+// ============================================================================
+// SoummamCar — Prisma Schema
+// ============================================================================
+// Complete data model for the SoummamCar rental platform.
+// Run `npx prisma migrate dev` after modifications.
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ======================= MODELS =======================
+
+model User {
+  id             String       @id @default(cuid())
+  email          String       @unique
+  phone          String       @unique
+  passwordHash   String
+  role           Role         @default(CLIENT)
+  fullName       String
+  wilaya         String?
+  idNumber       String?      // CNI or passport number
+  licenseNumber  String?      // Driving license
+  passportNumber String?      // For diaspora clients
+  country        String?      // Country of residence (diaspora)
+  isDiaspora     Boolean      @default(false)
+  rating         Int          @default(5) // 1-5
+  status         ClientStatus @default(ACTIVE)
+  internalNotes  String?
+
+  // Refresh token tracking (for JWT rotation)
+  refreshToken   String?
+  resetToken     String?
+  resetTokenExp  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reservations Reservation[]
+  documents    Document[]
+  activityLogs ActivityLog[]
+
+  @@index([email])
+  @@index([phone])
+  @@index([role])
+}
+
+model Vehicle {
+  id              String          @id @default(cuid())
+  name            String
+  plateNumber     String          @unique
+  brand           String
+  model           String
+  year            Int
+  status          VehicleStatus   @default(AVAILABLE)
+  images          String[]        // URLs
+  dailyRate       Int             // in DZD
+  cautionAmount   Int             // Variable per vehicle (15 000 – 50 000 DA)
+  currentKm       Int
+  nextServiceKm   Int
+  fuelType        FuelType
+  transmission    Transmission
+  seats           Int
+  hasAC           Boolean         @default(true)
+  category        VehicleCategory
+  kmPolicy        KmPolicy        @default(UNLIMITED)
+  kmLimit         Int?            // if LIMITED, km/day
+  insuranceExpiry DateTime
+  ctExpiry        DateTime        // Contrôle technique
+  vignetteExpiry  DateTime
+  registrationDoc String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reservations       Reservation[]
+  maintenanceRecords MaintenanceRecord[]
+
+  @@index([status])
+  @@index([category])
+}
+
+model Reservation {
+  id              String            @id @default(cuid())
+  referenceNumber String            @unique // SC-XXXXXX
+  userId          String
+  user            User              @relation(fields: [userId], references: [id])
+  vehicleId       String
+  vehicle         Vehicle           @relation(fields: [vehicleId], references: [id])
+
+  pickupDate      DateTime
+  returnDate      DateTime
+  pickupTime      String            // "09:00"
+  returnTime      String            // "18:00"
+  pickupLocation  PickupLocation
+  returnLocation  PickupLocation
+
+  status          ReservationStatus @default(PENDING)
+  isDiaspora      Boolean           @default(false)
+  flightNumber    String?           // For airport pickup coordination
+
+  dailyRate       Int
+  totalDays       Int
+  subtotal        Int
+  depositAmount   Int               // 25% arrhes
+  cautionAmount   Int               // Variable per vehicle
+  extras          Json?             // BookingExtra[]
+  specialRequests String?
+
+  currency        String            @default("DZD") // DZD, EUR, CAD, GBP
+  exchangeRate    Float?            // Rate at reservation time
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments         Payment[]
+  contract         Contract?
+  conditionReports ConditionReport[]
+
+  @@index([userId])
+  @@index([vehicleId])
+  @@index([status])
+  @@index([referenceNumber])
+  @@index([pickupDate])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  reservationId String
+  reservation   Reservation   @relation(fields: [reservationId], references: [id])
+  type          PaymentType   // DEPOSIT, BALANCE, CAUTION
+  amount        Int
+  currency      String        @default("DZD")
+  method        PaymentMethod
+  status        PaymentStatus @default(PENDING)
+  transactionId String?       // SATIM or Stripe transaction ID
+  paidAt        DateTime?
+  refundedAt    DateTime?
+  retainedAmount Int?
+  retainedReason String?
+  notes          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([reservationId])
+  @@index([status])
+}
+
+model Contract {
+  id            String         @id @default(cuid())
+  reservationId String         @unique
+  reservation   Reservation    @relation(fields: [reservationId], references: [id])
+  pdfUrl        String?        // URL of the generated PDF
+  status        ContractStatus @default(DRAFT)
+  signatureUrl  String?        // Signature image URL
+  signedAt      DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([reservationId])
+}
+
+model ConditionReport {
+  id            String      @id @default(cuid())
+  reservationId String
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  type          ReportType  // PICKUP or RETURN
+  photos        Json        // { front_left: url, front_right: url, ... }
+  kmReading     Int
+  fuelLevel     FuelLevel
+  damageNotes   String?
+  gpsLatitude   Float?
+  gpsLongitude  Float?
+  signature     String?
+
+  createdAt DateTime @default(now())
+
+  @@index([reservationId])
+}
+
+model Document {
+  id       String       @id @default(cuid())
+  userId   String
+  user     User         @relation(fields: [userId], references: [id])
+  type     DocumentType // ID_CARD, DRIVERS_LICENSE, PASSPORT
+  fileUrl  String
+  verified Boolean      @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model MaintenanceRecord {
+  id        String  @id @default(cuid())
+  vehicleId String
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+  date      DateTime
+  km        Int
+  type      String
+  cost      Int
+  notes     String?
+
+  createdAt DateTime @default(now())
+
+  @@index([vehicleId])
+}
+
+model Setting {
+  key   String @id
+  value String
+}
+
+/// Admin/Agent activity audit log
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String   // e.g. "CREATE_VEHICLE", "CONFIRM_PAYMENT"
+  entity    String   // e.g. "Vehicle", "Reservation"
+  entityId  String?
+  metadata  Json?    // Additional context
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ======================= ENUMS =======================
+
+enum Role {
+  ADMIN
+  AGENT
+  CLIENT
+}
+
+enum ClientStatus {
+  ACTIVE
+  MONITOR
+  BLACKLISTED
+}
+
+enum VehicleStatus {
+  AVAILABLE
+  RENTED
+  MAINTENANCE
+  UNAVAILABLE
+}
+
+enum VehicleCategory {
+  ECONOMY
+  COMPACT
+  SEDAN
+  SUV
+  PREMIUM
+}
+
+enum FuelType {
+  ESSENCE
+  DIESEL
+  GPL
+}
+
+enum Transmission {
+  MANUAL
+  AUTOMATIC
+}
+
+enum KmPolicy {
+  UNLIMITED
+  LIMITED
+}
+
+enum PickupLocation {
+  AGENCY_CENTER
+  AIRPORT_SOUMMAM
+  HOME_DELIVERY
+  CUSTOM
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentType {
+  DEPOSIT
+  BALANCE
+  CAUTION
+}
+
+enum PaymentMethod {
+  BARIDIMOB
+  CIB
+  EDAHABIA
+  STRIPE
+  CASH
+  BANK_TRANSFER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  PARTIALLY_RETAINED
+  RETAINED
+  DISPUTED
+}
+
+enum ContractStatus {
+  DRAFT
+  SIGNED
+  COMPLETED
+}
+
+enum ReportType {
+  PICKUP
+  RETURN
+}
+
+enum FuelLevel {
+  QUARTER
+  HALF
+  THREE_QUARTER
+  FULL
+}
+
+enum DocumentType {
+  ID_CARD
+  DRIVERS_LICENSE
+  PASSPORT
+}

@@ -1,5 +1,9 @@
 import { MapPin, Phone, Mail, MessageCircle, Facebook, Instagram } from "lucide-react";
 
+const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '+213XXXXXXXXX';
+const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER.replace(/[^\d]/g, '')}`;
+const phoneDisplay = WHATSAPP_NUMBER;
+
 interface FooterProps {
   language: "fr" | "en" | "ar";
 }
@@ -7,7 +11,6 @@ interface FooterProps {
 const translations = {
   fr: {
     address: "Béjaïa, Algérie",
-    phone: "+213 555 000 000",
     email: "contact@soummamcar.com",
     whatsapp: "WhatsApp",
     legal: "Mentions légales",
@@ -16,7 +19,6 @@ const translations = {
   },
   en: {
     address: "Béjaïa, Algeria",
-    phone: "+213 555 000 000",
     email: "contact@soummamcar.com",
     whatsapp: "WhatsApp",
     legal: "Legal notices",
@@ -25,7 +27,6 @@ const translations = {
   },
   ar: {
     address: "بجاية، الجزائر",
-    phone: "+213 555 000 000",
     email: "contact@soummamcar.com",
     whatsapp: "واتساب",
     legal: "الإشعارات القانونية",
@@ -68,8 +69,8 @@ export function Footer({ language }: FooterProps) {
             </div>
             <div className="flex items-center gap-3">
               <Phone className="h-5 w-5 text-amber" />
-              <a href="tel:+213555000000" className="hover:text-amber transition-colors">
-                {t.phone}
+              <a href={`tel:${WHATSAPP_NUMBER.replace(/\s/g, '')}`} className="hover:text-amber transition-colors">
+                {phoneDisplay}
               </a>
             </div>
             <div className="flex items-center gap-3">
@@ -84,7 +85,7 @@ export function Footer({ language }: FooterProps) {
             <div className="flex items-center gap-3">
               <MessageCircle className="h-5 w-5 text-amber" />
               <a
-                href="https://wa.me/213555000000"
+                href={whatsappLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-amber transition-colors"
@@ -115,10 +116,10 @@ export function Footer({ language }: FooterProps) {
               </a>
             </div>
             <div className="space-y-2">
-              <a href="#" className="block text-white/70 hover:text-white transition-colors">
+              <a href="/legal" className="block text-white/70 hover:text-white transition-colors">
                 {t.legal}
               </a>
-              <a href="#" className="block text-white/70 hover:text-white transition-colors">
+              <a href="/privacy" className="block text-white/70 hover:text-white transition-colors">
                 {t.privacy}
               </a>
             </div>

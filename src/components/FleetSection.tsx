@@ -1,13 +1,16 @@
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Users, Settings, Snowflake } from "lucide-react";
+import { Users, Settings, Snowflake, Filter } from "lucide-react";
 import { useExchangeRate } from "@/hooks/useExchangeRate";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { vehicles, Vehicle } from "@/lib/vehiclesData";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { vehicles } from "@/lib/vehiclesData";
+import type { CatalogVehicle } from "@/types";
 
 interface FleetSectionProps {
   language: "fr" | "en" | "ar";
-  onBookVehicle: (vehicle: Vehicle) => void;
+  onBookVehicle: (vehicle: CatalogVehicle) => void;
 }
 
 const translations = {
@@ -48,6 +51,21 @@ export function FleetSection({ language, onBookVehicle }: FleetSectionProps) {
   const isRTL = language === "ar";
   const { convert } = useExchangeRate(true);
 
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [transmissionFilter, setTransmissionFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("default");
+
+  const categories = useMemo(() => [...new Set(vehicles.map((v) => v.category))], []);
+
+  const filteredVehicles = useMemo(() => {
+    let result = [...vehicles];
+    if (categoryFilter !== "all") result = result.filter((v) => v.category === categoryFilter);
+    if (transmissionFilter !== "all") result = result.filter((v) => v.transmission === transmissionFilter);
+    if (sortBy === "price-asc") result.sort((a, b) => a.dailyRate - b.dailyRate);
+    else if (sortBy === "price-desc") result.sort((a, b) => b.dailyRate - a.dailyRate);
+    return result;
+  }, [categoryFilter, transmissionFilter, sortBy]);
+
   return (
     <section id="fleet" className="py-20 bg-background" dir={isRTL ? "rtl" : "ltr"}>
       <div className="container mx-auto px-4">
@@ -66,8 +84,46 @@ export function FleetSection({ language, onBookVehicle }: FleetSectionProps) {
           </p>
         </motion.div>
 
+        {/* Filter Bar */}
+        <div className="flex flex-wrap gap-3 mb-8 items-center justify-center">
+          <div className="flex items-center gap-1 text-muted-foreground">
+            <Filter className="h-4 w-4" />
+          </div>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Catégorie" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{language === "fr" ? "Toutes catégories" : language === "ar" ? "جميع الفئات" : "All categories"}</SelectItem>
+              {categories.map((c) => (
+                <SelectItem key={c} value={c}>{c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={transmissionFilter} onValueChange={setTransmissionFilter}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Transmission" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{language === "fr" ? "Toutes" : language === "ar" ? "الكل" : "All"}</SelectItem>
+              <SelectItem value="MANUAL">{t.manual}</SelectItem>
+              <SelectItem value="AUTOMATIC">{t.automatic}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Trier" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">{language === "fr" ? "Par défaut" : language === "ar" ? "افتراضي" : "Default"}</SelectItem>
+              <SelectItem value="price-asc">{language === "fr" ? "Prix croissant" : language === "ar" ? "سعر تصاعدي" : "Price: Low"}</SelectItem>
+              <SelectItem value="price-desc">{language === "fr" ? "Prix décroissant" : language === "ar" ? "سعر تنازلي" : "Price: High"}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {vehicles.map((vehicle, index) => (
+          {filteredVehicles.map((vehicle, index) => (
             <motion.div
               key={vehicle.id}
               initial={{ opacity: 0, y: 30 }}
@@ -78,18 +134,18 @@ export function FleetSection({ language, onBookVehicle }: FleetSectionProps) {
             >
               <div className="relative">
                 <img
-                  src={vehicle.image}
+                  src={vehicle.images[0]}
                   alt={vehicle.name}
                   className="w-full h-48 object-cover"
                 />
                 <Badge
                   className={`absolute top-3 ${isRTL ? "left-3" : "right-3"} ${
-                    vehicle.available
+                    vehicle.status === 'AVAILABLE'
                       ? "bg-green-500 hover:bg-green-600"
                       : "bg-red-500 hover:bg-red-600"
                   }`}
                 >
-                  {vehicle.available ? t.available : t.unavailable}
+                  {vehicle.status === 'AVAILABLE' ? t.available : t.unavailable}
                 </Badge>
               </div>
               <div className="p-5">
@@ -104,7 +160,7 @@ export function FleetSection({ language, onBookVehicle }: FleetSectionProps) {
                   <div className="flex items-center gap-1">
                     <Settings className="h-4 w-4" />
                     <span className="text-sm">
-                      {vehicle.transmission === "manual" ? t.manual : t.automatic}
+                      {vehicle.transmission === "MANUAL" ? t.manual : t.automatic}
                     </span>
                   </div>
                   {vehicle.hasAC && (
@@ -117,16 +173,16 @@ export function FleetSection({ language, onBookVehicle }: FleetSectionProps) {
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-2xl font-bold text-amber">
-                      {vehicle.pricePerDay.toLocaleString()}
+                      {vehicle.dailyRate.toLocaleString()}
                     </span>
                     <span className="text-sm text-muted-foreground"> DA{t.perDay}</span>
                     <span className="block text-xs text-muted-foreground">
-                      ≈ {convert(vehicle.pricePerDay)} €{t.perDay}
+                      ≈ {convert(vehicle.dailyRate)} €{t.perDay}
                     </span>
                   </div>
                   <Button
                     onClick={() => onBookVehicle(vehicle)}
-                    disabled={!vehicle.available}
+                    disabled={vehicle.status !== 'AVAILABLE'}
                     className="bg-primary hover:bg-primary/90 text-primary-foreground"
                   >
                     {t.book}

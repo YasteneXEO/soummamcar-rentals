@@ -1,26 +1,70 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- TODO: Set the document title to the name of your application -->
-    <title>Lovable App</title>
-    <meta name="description" content="Lovable Generated Project" />
-    <meta name="author" content="Lovable" />
 
-    <!-- TODO: Update og:title to match your application name -->
-    <meta property="og:title" content="Lovable App" />
-    <meta property="og:description" content="Lovable Generated Project" />
+    <title>SoummamCar — Location de voitures à Béjaïa, Algérie</title>
+    <meta name="description" content="SoummamCar : location de voitures à Béjaïa, Algérie. Réservez en ligne, récupérez à l'aéroport Soummam ou en agence. Service dédié à la diaspora algérienne. Car rental in Béjaïa — book online, pick up at Soummam Airport." />
+    <meta name="keywords" content="location voiture Béjaïa, car rental Béjaïa, aéroport Soummam, location auto Algérie, diaspora algérienne, SoummamCar" />
+    <meta name="author" content="SoummamCar" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1e3a5f" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="SoummamCar — Location de voitures à Béjaïa, Algérie" />
+    <meta property="og:description" content="Réservez votre véhicule en ligne. Récupération aéroport Soummam ou agence Béjaïa centre. Service diaspora avec paiement en EUR/CAD." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:url" content="https://soummamcar.dz" />
+    <meta property="og:locale" content="fr_DZ" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:locale:alternate" content="ar_DZ" />
+    <meta property="og:site_name" content="SoummamCar" />
 
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Lovable" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:title" content="SoummamCar — Location de voitures à Béjaïa" />
+    <meta name="twitter:description" content="Réservez en ligne, récupérez à l'aéroport Soummam. Service dédié diaspora." />
+
+    <!-- Hreflang -->
+    <link rel="alternate" hreflang="fr" href="https://soummamcar.dz" />
+    <link rel="alternate" hreflang="en" href="https://soummamcar.dz?lang=en" />
+    <link rel="alternate" hreflang="ar" href="https://soummamcar.dz?lang=ar" />
+    <link rel="alternate" hreflang="x-default" href="https://soummamcar.dz" />
+
+    <!-- Schema.org CarRental -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "CarRental",
+      "name": "SoummamCar",
+      "description": "Location de voitures à Béjaïa, Algérie. Service dédié à la diaspora.",
+      "url": "https://soummamcar.dz",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Béjaïa",
+        "addressRegion": "Béjaïa",
+        "addressCountry": "DZ"
+      },
+      "areaServed": {
+        "@type": "City",
+        "name": "Béjaïa"
+      },
+      "currenciesAccepted": "DZD, EUR, CAD, GBP"
+    }
+    </script>
   </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
   </body>
 </html>

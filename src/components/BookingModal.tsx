@@ -17,13 +17,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Vehicle, vehicles } from "@/lib/vehiclesData";
+import { vehicles } from "@/lib/vehiclesData";
+import { reservationsApi } from "@/services/api";
+import { useAuthStore } from "@/store/authStore";
+import type { CatalogVehicle } from "@/types";
 
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
   language: "fr" | "en" | "ar";
-  preSelectedVehicle?: Vehicle;
+  preSelectedVehicle?: CatalogVehicle;
   preSelectedDates?: {
     pickup: Date;
     return: Date;
@@ -198,7 +201,7 @@ export function BookingModal({
   const [pickupDate, setPickupDate] = useState<Date | undefined>(preSelectedDates?.pickup);
   const [returnDate, setReturnDate] = useState<Date | undefined>(preSelectedDates?.return);
   const [location, setLocation] = useState(preSelectedDates?.location || "");
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | undefined>(preSelectedVehicle);
+  const [selectedVehicle, setSelectedVehicle] = useState<CatalogVehicle | undefined>(preSelectedVehicle);
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -219,14 +222,14 @@ export function BookingModal({
   if (!isOpen) return null;
 
   const numDays = pickupDate && returnDate ? differenceInDays(returnDate, pickupDate) || 1 : 1;
-  const subtotal = selectedVehicle ? selectedVehicle.pricePerDay * numDays : 0;
+  const subtotal = selectedVehicle ? selectedVehicle.dailyRate * numDays : 0;
   const depositAmount = Math.round(subtotal * 0.25);
-  const cautionAmount = 20000;
+  const cautionAmount = selectedVehicle?.cautionAmount ?? 20000;
   const totalOnPickup = subtotal - depositAmount + cautionAmount;
 
   const eurLabel = (amountDZD: number) => ` (≈ ${convert(amountDZD)} €)`;
 
-  const availableVehicles = vehicles.filter((v) => v.available);
+  const availableVehicles = vehicles.filter((v) => v.status === 'AVAILABLE');
 
 
   const canProceedStep1 = pickupDate && returnDate && location;
@@ -239,11 +242,36 @@ export function BookingModal({
     formData.licenseNumber &&
     formData.wilaya;
   const canConfirm = acceptedTerms;
+  const [submitting, setSubmitting] = useState(false);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
-  const handleConfirm = () => {
-    const ref = `SC-${Date.now().toString(36).toUpperCase()}`;
-    setBookingRef(ref);
-    setIsConfirmed(true);
+  const handleConfirm = async () => {
+    if (!selectedVehicle || !pickupDate || !returnDate) return;
+    setSubmitting(true);
+    try {
+      // If authenticated, send to API; otherwise create client-side reference
+      if (isAuthenticated) {
+        const reservation = await reservationsApi.create({
+          vehicleId: selectedVehicle.id,
+          startDate: pickupDate.toISOString(),
+          endDate: returnDate.toISOString(),
+          pickupLocation: location,
+          isDiaspora,
+          extras: [],
+          notes: formData.specialRequests || undefined,
+        });
+        setBookingRef(reservation.reference || reservation.data?.reference);
+      } else {
+        // Fallback: generate client-side ref (for demo / non-logged-in users)
+        const ref = `SC-${Date.now().toString(36).toUpperCase()}`;
+        setBookingRef(ref);
+      }
+      setIsConfirmed(true);
+    } catch (error: any) {
+      alert(error.message || 'Erreur lors de la réservation');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleClose = () => {
@@ -399,22 +427,22 @@ export function BookingModal({
             )}
           >
             <img
-              src={vehicle.image}
+              src={vehicle.images[0]}
               alt={vehicle.name}
               className="w-24 h-16 object-cover rounded"
             />
             <div className="flex-1">
               <h4 className="font-semibold">{vehicle.name}</h4>
               <p className="text-sm text-muted-foreground">
-                {vehicle.seats} places • {vehicle.transmission === "manual" ? "Manuelle" : "Auto"}
+                {vehicle.seats} places • {vehicle.transmission === "MANUAL" ? "Manuelle" : "Auto"}
               </p>
             </div>
             <div className="text-right">
               <span className="font-bold text-amber">
-                {vehicle.pricePerDay.toLocaleString()} DA
+                {vehicle.dailyRate.toLocaleString()} DA
               </span>
               <span className="block text-xs text-muted-foreground">
-                ≈ {convert(vehicle.pricePerDay)} €
+                ≈ {convert(vehicle.dailyRate)} €
               </span>
               <span className="text-sm text-muted-foreground">{t.perDay}</span>
             </div>
@@ -440,7 +468,7 @@ export function BookingModal({
           <Input
             value={formData.phone}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            placeholder="+213 555 000 000"
+            placeholder="+213 XXX XXX XXX"
           />
         </div>
         <div className="space-y-2">
@@ -520,7 +548,7 @@ export function BookingModal({
           </div>
           <div className="flex justify-between">
             <span>{t.dailyRate}</span>
-            <span className="font-medium">{selectedVehicle?.pricePerDay.toLocaleString()} DA{eurLabel(selectedVehicle?.pricePerDay || 0)}</span>
+            <span className="font-medium">{selectedVehicle?.dailyRate.toLocaleString()} DA{eurLabel(selectedVehicle?.dailyRate || 0)}</span>
           </div>
           <div className="border-t border-border pt-3">
             <div className="flex justify-between">

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Menu, X, ChevronDown, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -7,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuthStore } from "@/store/authStore";
 
 type Language = "fr" | "en" | "ar";
 
@@ -43,6 +45,7 @@ const translations = {
 export function Navbar({ language, setLanguage, onBookNow }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const t = translations[language];
+  const { isAuthenticated, user } = useAuthStore();
 
   const scrollTo = (id: string) => {
     const element = document.getElementById(id);
@@ -112,6 +115,20 @@ export function Navbar({ language, setLanguage, onBookNow }: NavbarProps) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            {isAuthenticated ? (
+              <Link to="/mon-compte">
+                <Button variant="ghost" size="sm" className="gap-1">
+                  <UserCircle className="h-4 w-4" />
+                  {user?.firstName || 'Compte'}
+                </Button>
+              </Link>
+            ) : (
+              <Link to="/connexion">
+                <Button variant="outline" size="sm">
+                  Connexion
+                </Button>
+              </Link>
+            )}
             <Button
               onClick={onBookNow}
               className="bg-amber hover:bg-amber-hover text-amber-foreground font-semibold"
@@ -185,6 +202,20 @@ export function Navbar({ language, setLanguage, onBookNow }: NavbarProps) {
                   AR
                 </Button>
               </div>
+              {isAuthenticated ? (
+                <Link to="/mon-compte" onClick={() => setIsOpen(false)}>
+                  <Button variant="outline" size="sm" className="w-full gap-1 mt-2">
+                    <UserCircle className="h-4 w-4" />
+                    {user?.firstName || 'Mon compte'}
+                  </Button>
+                </Link>
+              ) : (
+                <Link to="/connexion" onClick={() => setIsOpen(false)}>
+                  <Button variant="outline" size="sm" className="w-full mt-2">
+                    Connexion
+                  </Button>
+                </Link>
+              )}
               <Button
                 onClick={onBookNow}
                 className="bg-amber hover:bg-amber-hover text-amber-foreground font-semibold mt-2"

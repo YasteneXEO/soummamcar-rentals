@@ -1,0 +1,68 @@
+# ============================================================================
+# SoummamCar — Render Blueprint (Infrastructure as Code)
+# ============================================================================
+# Ce fichier configure automatiquement les services sur Render.
+# Pour l'utiliser : Dashboard Render → New → Blueprint → sélectionner ce repo.
+# ============================================================================
+
+databases:
+  - name: soummamcar-db
+    plan: free # Passer à "starter" en production
+    databaseName: soummamcar
+    user: soummamcar
+
+services:
+  # ─── Backend API (Express + Prisma) ──────────────────────────
+  - type: web
+    name: soummamcar-api
+    runtime: node
+    plan: free # Passer à "starter" en production
+    rootDir: server
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && node dist/server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: soummamcar-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: "15m"
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: "7d"
+      - key: BCRYPT_ROUNDS
+        value: "12"
+      - key: FRONTEND_URL
+        value: https://soummamcar.onrender.com
+      - key: APP_URL
+        value: https://soummamcar-api.onrender.com
+
+  # ─── Frontend (Vite Static Site) ─────────────────────────────
+  - type: web
+    name: soummamcar
+    runtime: static
+    plan: free
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://soummamcar-api.onrender.com/api
+      - key: VITE_WHATSAPP_NUMBER
+        value: "213555000000"

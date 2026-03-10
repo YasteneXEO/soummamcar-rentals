@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
 
+const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '+213XXXXXXXXX';
+const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER.replace(/[^\d]/g, '')}`;
+
 interface HeroSectionProps {
   language: "fr" | "en" | "ar";
   onViewFleet: () => void;
@@ -88,7 +91,7 @@ export function HeroSection({ language, onViewFleet }: HeroSectionProps) {
               className="border-white text-white hover:bg-white hover:text-navy font-semibold text-lg px-8"
             >
               <a
-                href="https://wa.me/213555000000"
+                href={whatsappLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2"

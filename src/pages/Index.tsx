@@ -9,14 +9,15 @@ import { DiasporaSection } from "@/components/DiasporaSection";
 import { TestimonialsSection } from "@/components/TestimonialsSection";
 import { Footer } from "@/components/Footer";
 import { BookingModal } from "@/components/BookingModal";
-import { Vehicle } from "@/lib/vehiclesData";
+import { SEO } from "@/components/SEO";
+import type { CatalogVehicle } from "@/types";
 
 type Language = "fr" | "en" | "ar";
 
 const Index = () => {
   const [language, setLanguage] = useState<Language>("fr");
   const [isBookingOpen, setIsBookingOpen] = useState(false);
-  const [preSelectedVehicle, setPreSelectedVehicle] = useState<Vehicle | undefined>();
+  const [preSelectedVehicle, setPreSelectedVehicle] = useState<CatalogVehicle | undefined>();
   const [preSelectedDates, setPreSelectedDates] = useState<{
     pickup: Date;
     return: Date;
@@ -44,7 +45,7 @@ const Index = () => {
     setIsBookingOpen(true);
   };
 
-  const handleBookVehicle = (vehicle: Vehicle) => {
+  const handleBookVehicle = (vehicle: CatalogVehicle) => {
     setPreSelectedVehicle(vehicle);
     setPreSelectedDates(undefined);
     setIsDiaspora(false);
@@ -62,6 +63,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
+      <SEO
+        title="SoummamCar — Location de voitures à Béjaïa, Algérie"
+        description="Louez votre véhicule à Béjaïa. Réservation en ligne, récupération aéroport Soummam ou agence. Service diaspora avec paiement en EUR."
+        canonical="https://soummamcar.dz"
+      />
       <Navbar
         language={language}
         setLanguage={setLanguage}
