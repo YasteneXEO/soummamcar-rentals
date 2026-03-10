@@ -4,12 +4,14 @@ import { authApi, clearTokens, getAccessToken } from '../services/api';
 interface User {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
   phone: string;
-  role: 'CLIENT' | 'ADMIN' | 'MANAGER';
+  role: 'CLIENT' | 'ADMIN' | 'AGENT';
   isDiaspora: boolean;
-  diasporaCountry?: string;
+  country?: string;
+  wilaya?: string;
+  idNumber?: string;
+  licenseNumber?: string;
 }
 
 interface AuthState {
@@ -19,7 +21,7 @@ interface AuthState {
 
   // Actions
   login: (email: string, password: string) => Promise<void>;
-  register: (data: { firstName: string; lastName: string; email: string; phone: string; password: string }) => Promise<void>;
+  register: (data: { fullName: string; email: string; phone: string; password: string; isDiaspora?: boolean; country?: string }) => Promise<void>;
   logout: () => Promise<void>;
   loadUser: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;

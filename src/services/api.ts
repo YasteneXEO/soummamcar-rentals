@@ -3,7 +3,7 @@
  * Handles authentication tokens, refresh, and error mapping.
  */
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 // ─── Token Management ──────────────────────────────────────────
 let accessToken: string | null = null;
@@ -125,21 +125,21 @@ async function uploadRequest<T>(
 
 // ─── Auth API ──────────────────────────────────────────────────
 export const authApi = {
-  register: (data: { firstName: string; lastName: string; email: string; phone: string; password: string }) =>
-    request<{ user: any; accessToken: string; refreshToken: string }>('/auth/register', {
+  register: (data: { fullName: string; email: string; phone: string; password: string; isDiaspora?: boolean; country?: string }) =>
+    request<{ user: any; tokens: { accessToken: string; refreshToken: string } }>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
     }).then((res) => {
-      setTokens(res.accessToken, res.refreshToken);
+      setTokens(res.tokens.accessToken, res.tokens.refreshToken);
       return res;
     }),
 
   login: (data: { email: string; password: string }) =>
-    request<{ user: any; accessToken: string; refreshToken: string }>('/auth/login', {
+    request<{ user: any; tokens: { accessToken: string; refreshToken: string } }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
     }).then((res) => {
-      setTokens(res.accessToken, res.refreshToken);
+      setTokens(res.tokens.accessToken, res.tokens.refreshToken);
       return res;
     }),
 
@@ -147,10 +147,10 @@ export const authApi = {
     request<void>('/auth/logout', { method: 'POST' }).finally(clearTokens),
 
   getProfile: () =>
-    request<any>('/auth/profile'),
+    request<any>('/auth/me').then((res) => res.data || res),
 
   updateProfile: (data: any) =>
-    request<any>('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) }),
+    request<any>('/auth/me', { method: 'PUT', body: JSON.stringify(data) }).then((res) => res.data || res),
 };
 
 // ─── Vehicles API ──────────────────────────────────────────────

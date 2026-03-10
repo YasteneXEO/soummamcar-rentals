@@ -79,7 +79,7 @@ export function exportReservationsCsv(reservations: any[]) {
     ['Référence', 'Client', 'Véhicule', 'Début', 'Fin', 'Montant', 'Statut'],
     reservations.map((r) => [
       r.reference,
-      `${r.user?.firstName || ''} ${r.user?.lastName || ''}`.trim(),
+      r.user?.fullName || '',
       `${r.vehicle?.brand || ''} ${r.vehicle?.model || ''}`.trim(),
       new Date(r.startDate).toLocaleDateString('fr-FR'),
       new Date(r.endDate).toLocaleDateString('fr-FR'),

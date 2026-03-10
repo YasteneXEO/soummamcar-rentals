@@ -119,7 +119,7 @@ export function Navbar({ language, setLanguage, onBookNow }: NavbarProps) {
               <Link to="/mon-compte">
                 <Button variant="ghost" size="sm" className="gap-1">
                   <UserCircle className="h-4 w-4" />
-                  {user?.firstName || 'Compte'}
+                  {user?.fullName?.split(' ')[0] || 'Compte'}
                 </Button>
               </Link>
             ) : (
@@ -206,7 +206,7 @@ export function Navbar({ language, setLanguage, onBookNow }: NavbarProps) {
                 <Link to="/mon-compte" onClick={() => setIsOpen(false)}>
                   <Button variant="outline" size="sm" className="w-full gap-1 mt-2">
                     <UserCircle className="h-4 w-4" />
-                    {user?.firstName || 'Mon compte'}
+                    {user?.fullName?.split(' ')[0] || 'Mon compte'}
                   </Button>
                 </Link>
               ) : (

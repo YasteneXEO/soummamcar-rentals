@@ -25,8 +25,7 @@ export default function AccountPage() {
   const [editing, setEditing] = useState(false);
   const [language, setLanguage] = useState<'fr' | 'en' | 'ar'>('fr');
   const [profileForm, setProfileForm] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
+    fullName: user?.fullName || '',
     phone: user?.phone || '',
   });
 
@@ -61,15 +60,9 @@ export default function AccountPage() {
                   <>
                     <input
                       className="w-full border rounded p-2 text-sm"
-                      value={profileForm.firstName}
-                      onChange={(e) => setProfileForm((f) => ({ ...f, firstName: e.target.value }))}
-                      placeholder="Prénom"
-                    />
-                    <input
-                      className="w-full border rounded p-2 text-sm"
-                      value={profileForm.lastName}
-                      onChange={(e) => setProfileForm((f) => ({ ...f, lastName: e.target.value }))}
-                      placeholder="Nom"
+                      value={profileForm.fullName}
+                      onChange={(e) => setProfileForm((f) => ({ ...f, fullName: e.target.value }))}
+                      placeholder="Nom complet"
                     />
                     <input
                       className="w-full border rounded p-2 text-sm"
@@ -84,11 +77,11 @@ export default function AccountPage() {
                   </>
                 ) : (
                   <>
-                    <p className="font-medium">{user?.firstName} {user?.lastName}</p>
+                    <p className="font-medium">{user?.fullName}</p>
                     <p className="text-sm text-gray-500">{user?.email}</p>
                     <p className="text-sm text-gray-500">{user?.phone}</p>
                     {user?.isDiaspora && (
-                      <Badge variant="secondary">Diaspora — {user.diasporaCountry}</Badge>
+                      <Badge variant="secondary">Diaspora — {user.country}</Badge>
                     )}
                     <Button size="sm" variant="outline" onClick={() => setEditing(true)}>Modifier</Button>
                   </>

@@ -37,8 +37,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register({
-        firstName: form.firstName,
-        lastName: form.lastName,
+        fullName: `${form.firstName} ${form.lastName}`.trim(),
         email: form.email,
         phone: form.phone,
         password: form.password,
