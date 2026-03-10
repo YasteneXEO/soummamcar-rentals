@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, Settings, Snowflake, Filter } from "lucide-react";
+import { Users, Settings, Snowflake, Filter, ArrowRight } from "lucide-react";
 import { useExchangeRate } from "@/hooks/useExchangeRate";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +24,7 @@ const translations = {
     unavailable: "Indisponible",
     manual: "Manuelle",
     automatic: "Automatique",
+    viewAll: "Voir tout le catalogue",
   },
   en: {
     title: "Our Fleet",
@@ -33,6 +35,7 @@ const translations = {
     unavailable: "Unavailable",
     manual: "Manual",
     automatic: "Automatic",
+    viewAll: "View full catalog",
   },
   ar: {
     title: "أسطولنا",
@@ -43,6 +46,7 @@ const translations = {
     unavailable: "غير متاح",
     manual: "يدوي",
     automatic: "أوتوماتيك",
+    viewAll: "عرض الكتالوج الكامل",
   },
 };
 
@@ -191,6 +195,19 @@ export function FleetSection({ language, onBookVehicle }: FleetSectionProps) {
               </div>
             </motion.div>
           ))}
+        </div>
+
+        {/* CTA to full catalog */}
+        <div className="text-center mt-12">
+          <Link to="/vehicules">
+            <Button
+              size="lg"
+              className="bg-amber hover:bg-amber-hover text-amber-foreground font-semibold text-lg px-8 gap-2"
+            >
+              {t.viewAll}
+              <ArrowRight className="h-5 w-5" />
+            </Button>
+          </Link>
         </div>
       </div>
     </section>

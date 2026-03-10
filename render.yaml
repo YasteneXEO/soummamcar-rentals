@@ -16,7 +16,7 @@ services:
     runtime: node
     plan: free
     buildCommand: npm install --include=dev && npm run build && cd server && npm install --include=dev && npx prisma generate && npm run build && mkdir -p dist/client && cp -r ../dist/* dist/client/
-    startCommand: cd server && npx prisma migrate deploy && node dist/server.js
+    startCommand: cd server && npx prisma migrate deploy && npx prisma db seed && node dist/server.js
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV

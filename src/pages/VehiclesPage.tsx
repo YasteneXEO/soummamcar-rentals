@@ -12,6 +12,7 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { useVehicles } from '@/hooks/useApi';
 import { useExchangeRate } from '@/hooks/useExchangeRate';
+import { vehicles as staticVehicles } from '@/lib/vehiclesData';
 import type { CatalogVehicle, VehicleCategory, Transmission, FuelType } from '@/types';
 
 type Language = 'fr' | 'en' | 'ar';
@@ -203,8 +204,10 @@ export default function VehiclesPage() {
   if (maxPrice) apiParams.maxPrice = maxPrice;
   if (minSeats) apiParams.minSeats = minSeats;
 
-  const { data, isLoading } = useVehicles(Object.keys(apiParams).length > 0 ? apiParams : undefined);
-  const vehiclesList: CatalogVehicle[] = data?.data || data || [];
+  const { data, isLoading, isError } = useVehicles(Object.keys(apiParams).length > 0 ? apiParams : undefined);
+  const apiVehicles: CatalogVehicle[] = data?.data || data || [];
+  // Fallback to static data when API returns empty or errors
+  const vehiclesList: CatalogVehicle[] = apiVehicles.length > 0 ? apiVehicles : (!isLoading ? staticVehicles : []);
 
   // Client-side text search
   const filtered = useMemo(() => {

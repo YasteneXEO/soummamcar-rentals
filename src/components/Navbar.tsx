@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Menu, X, ChevronDown, UserCircle } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { Menu, X, ChevronDown, UserCircle, Car } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,6 +22,7 @@ const translations = {
   fr: {
     home: "Accueil",
     fleet: "Notre Flotte",
+    catalog: "Catalogue",
     howItWorks: "Comment ça marche",
     contact: "Contact",
     bookNow: "Réserver maintenant",
@@ -29,13 +30,15 @@ const translations = {
   en: {
     home: "Home",
     fleet: "Our Fleet",
+    catalog: "Catalog",
     howItWorks: "How it works",
     contact: "Contact",
     bookNow: "Book now",
   },
   ar: {
     home: "الرئيسية",
-    fleet: "أسيارتنا",
+    fleet: "أسطولنا",
+    catalog: "الكتالوج",
     howItWorks: "كيف يعمل",
     contact: "اتصل بنا",
     bookNow: "احجز الآن",
@@ -46,6 +49,8 @@ export function Navbar({ language, setLanguage, onBookNow }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const t = translations[language];
   const { isAuthenticated, user } = useAuthStore();
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
 
   const scrollTo = (id: string) => {
     const element = document.getElementById(id);
@@ -60,38 +65,49 @@ export function Navbar({ language, setLanguage, onBookNow }: NavbarProps) {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex-shrink-0">
+          <Link to="/" className="flex-shrink-0">
             <span className="text-2xl font-display font-bold text-navy">
               Soummam<span className="text-amber">Car</span>
             </span>
-          </div>
+          </Link>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            <button
-              onClick={() => scrollTo("home")}
-              className="text-foreground/80 hover:text-foreground transition-colors font-medium"
+            {isHomePage ? (
+              <button
+                onClick={() => scrollTo("home")}
+                className="text-foreground/80 hover:text-foreground transition-colors font-medium"
+              >
+                {t.home}
+              </button>
+            ) : (
+              <Link to="/" className="text-foreground/80 hover:text-foreground transition-colors font-medium">
+                {t.home}
+              </Link>
+            )}
+            <Link
+              to="/vehicules"
+              className="text-foreground/80 hover:text-foreground transition-colors font-medium flex items-center gap-1"
             >
-              {t.home}
-            </button>
-            <button
-              onClick={() => scrollTo("fleet")}
-              className="text-foreground/80 hover:text-foreground transition-colors font-medium"
-            >
-              {t.fleet}
-            </button>
-            <button
-              onClick={() => scrollTo("how-it-works")}
-              className="text-foreground/80 hover:text-foreground transition-colors font-medium"
-            >
-              {t.howItWorks}
-            </button>
-            <button
-              onClick={() => scrollTo("contact")}
-              className="text-foreground/80 hover:text-foreground transition-colors font-medium"
-            >
-              {t.contact}
-            </button>
+              <Car className="h-4 w-4" />
+              {t.catalog}
+            </Link>
+            {isHomePage && (
+              <>
+                <button
+                  onClick={() => scrollTo("how-it-works")}
+                  className="text-foreground/80 hover:text-foreground transition-colors font-medium"
+                >
+                  {t.howItWorks}
+                </button>
+                <button
+                  onClick={() => scrollTo("contact")}
+                  className="text-foreground/80 hover:text-foreground transition-colors font-medium"
+                >
+                  {t.contact}
+                </button>
+              </>
+            )}
           </div>
 
           {/* Right side */}
@@ -152,30 +168,38 @@ export function Navbar({ language, setLanguage, onBookNow }: NavbarProps) {
         {isOpen && (
           <div className="md:hidden py-4 border-t border-border">
             <div className="flex flex-col space-y-3">
-              <button
-                onClick={() => scrollTo("home")}
-                className="text-left py-2 text-foreground/80 hover:text-foreground"
-              >
-                {t.home}
-              </button>
-              <button
-                onClick={() => scrollTo("fleet")}
-                className="text-left py-2 text-foreground/80 hover:text-foreground"
-              >
-                {t.fleet}
-              </button>
-              <button
-                onClick={() => scrollTo("how-it-works")}
-                className="text-left py-2 text-foreground/80 hover:text-foreground"
-              >
-                {t.howItWorks}
-              </button>
-              <button
-                onClick={() => scrollTo("contact")}
-                className="text-left py-2 text-foreground/80 hover:text-foreground"
-              >
-                {t.contact}
-              </button>
+              {isHomePage ? (
+                <button
+                  onClick={() => scrollTo("home")}
+                  className="text-left py-2 text-foreground/80 hover:text-foreground"
+                >
+                  {t.home}
+                </button>
+              ) : (
+                <Link to="/" onClick={() => setIsOpen(false)} className="text-left py-2 text-foreground/80 hover:text-foreground">
+                  {t.home}
+                </Link>
+              )}
+              <Link to="/vehicules" onClick={() => setIsOpen(false)} className="text-left py-2 text-foreground/80 hover:text-foreground flex items-center gap-2">
+                <Car className="h-4 w-4" />
+                {t.catalog}
+              </Link>
+              {isHomePage && (
+                <>
+                  <button
+                    onClick={() => scrollTo("how-it-works")}
+                    className="text-left py-2 text-foreground/80 hover:text-foreground"
+                  >
+                    {t.howItWorks}
+                  </button>
+                  <button
+                    onClick={() => scrollTo("contact")}
+                    className="text-left py-2 text-foreground/80 hover:text-foreground"
+                  >
+                    {t.contact}
+                  </button>
+                </>
+              )}
               <div className="flex items-center gap-2 pt-2">
                 <Button
                   variant="outline"
