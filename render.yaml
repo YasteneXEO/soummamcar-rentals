@@ -47,7 +47,6 @@ services:
   - type: web
     name: soummamcar
     runtime: static
-    plan: free
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     headers:
