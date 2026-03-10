@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 import { corsOptions } from './config/cors.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -55,9 +57,29 @@ app.use('/api/payouts', payoutRoutes);
 // ─── Initialize Cron Jobs ──────────────────────────────────────
 initCronJobs();
 
-// ─── 404 Handler ───────────────────────────────────────────────
-app.use((_req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+// ─── Serve Frontend (production) ───────────────────────────────
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const clientDist = path.join(__dirname, 'client');
+
+// Hashed assets — long cache
+app.use('/assets', express.static(path.join(clientDist, 'assets'), {
+  maxAge: '1y',
+  immutable: true,
+}));
+
+// Other static files
+app.use(express.static(clientDist, { maxAge: 0 }));
+
+// SPA fallback — non-API routes serve index.html
+app.use((req, res, next) => {
+  // Don't catch API routes
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'Route not found' });
+  }
+  res.sendFile(path.join(clientDist, 'index.html'), (err) => {
+    if (err) next(err);
+  });
 });
 
 // ─── Global Error Handler ──────────────────────────────────────
