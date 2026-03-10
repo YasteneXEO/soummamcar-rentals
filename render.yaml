@@ -15,7 +15,7 @@ services:
     name: soummamcar
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build && cd server && npm install --include=dev && npx prisma generate && npm run build && mkdir -p dist/client && cp -r ../dist/* dist/client/
+    buildCommand: npm install --include=dev && npm run build && cd server && npm install --include=dev && npx prisma generate && npm run build && mkdir -p dist/client && cp -r ../dist/* dist/client/
     startCommand: cd server && npx prisma migrate deploy && node dist/server.js
     healthCheckPath: /api/health
     envVars:
